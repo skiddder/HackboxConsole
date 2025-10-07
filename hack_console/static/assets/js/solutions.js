@@ -1,5 +1,5 @@
 class SolutionManager {
-    #challenges = [];
+    #solutions = [];
     #currentStep = null;
     #currentSolution = null;
     #refreshSeconds = 0;
@@ -64,7 +64,7 @@ class SolutionManager {
             }
         }
         catch {
-            console.log("Error fetching current unlocked challenge");
+            console.log("Error fetching current unlocked solution");
             return 1;
         }
         return 1;
@@ -75,11 +75,11 @@ class SolutionManager {
         try{
             var requiresRendering = false;
             try {
-                this.#challenges = await this.getSolutions();
-                console.log("Solutions", this.#challenges);
+                this.#solutions = await this.getSolutions();
+                console.log("Solutions", this.#solutions);
             }
             catch {
-                console.log("Error fetching challenges");
+                console.log("Error fetching solutions");
             }
             try {
                 var currentStep = await this.getUnlockedStep();
@@ -104,7 +104,7 @@ class SolutionManager {
                 }
             }
             catch {
-                console.log("Error fetching current challenge");
+                console.log("Error fetching current solution");
             }
             if(requiresRendering) {
                 this.#render();
@@ -116,10 +116,10 @@ class SolutionManager {
     }
 
     #informUserOfNewStep() {
-        alert("Solution got approved, you have unlocked another challenge!");
+        alert("Solution got approved, you have unlocked another solution!");
     }
     #informUserOfRevokedStep() {
-        alert("Solution got revoked, back to the previous challenge!");
+        alert("Solution got revoked, back to the previous solution!");
     }
 
     #setRefreshTimer() {
@@ -148,10 +148,13 @@ class SolutionManager {
         if(this.#currentStep < this.#currentSolution) {
             this.#currentSolution = this.#currentStep;
         }
-        if(this.#challenges.length === 0) {
-            console.log("No challenges available");
+        if(this.#solutions.length === 0) {
+            console.log("No solutions available");
             return;
         }
+
+        document.getElementById("solutionIndex").innerText = this.#currentSolution;
+
         // not at the first challenge
         if(this.#currentSolution > 1) {
             document.getElementById("navToPreviousSolution").style.display = "block";
@@ -161,7 +164,7 @@ class SolutionManager {
         }
         // not at the last challenge
         if(
-            this.#currentSolution < this.#challenges.length &&
+            this.#currentSolution < this.#solutions.length &&
             this.#currentSolution < this.#currentStep
 
         ){
@@ -178,14 +181,14 @@ class SolutionManager {
         if(mdUrl.endsWith("/")) {
             mdUrl = mdUrl.substring(0, mdUrl.length - 1);
         }
-        if(this.#challenges[this.#currentSolution - 1].startsWith("/")) {
-            mdUrl += this.#challenges[this.#currentSolution - 1];
+        if(this.#solutions[this.#currentSolution - 1].startsWith("/")) {
+            mdUrl += this.#solutions[this.#currentSolution - 1];
         }
         else {
-            mdUrl += "/" + this.#challenges[this.#currentSolution - 1];
+            mdUrl += "/" + this.#solutions[this.#currentSolution - 1];
         }
-        if(document.getElementById("challengeTitle")) {
-            document.getElementById("challengeTitle").innerText = "Solution " + this.#currentSolution;
+        if(document.getElementById("solutionTitle")) {
+            document.getElementById("solutionTitle").innerText = "Solution " + this.#currentSolution;
         }
         document.getElementById("zeromd").src = mdUrl;        
     }
@@ -206,15 +209,41 @@ class SolutionManager {
     }
 
     navToNextSolution() {
-        if(this.#currentSolution < this.#challenges.length) {
+        if(this.#currentSolution < this.#solutions.length) {
             this.#currentSolution++;
             this.#render();
         }
+    }
+
+    registerHotkeys() {
+        // register <- and -> for navigation
+        document.addEventListener('keydown', (event) => {
+            if(event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable) {
+                // ignore when focused on input or textarea or contenteditable
+                return;
+            }
+            if(event.key === 'ArrowLeft' || event.key === 'p') {
+                if(this.#isSubSite) {
+                    this.navToCurrentSolution();
+                    return;
+                }
+                this.navToPreviousSolution();
+                return;
+            }
+            else if(event.key === 'ArrowRight' || event.key === 'n') {
+                this.navToNextSolution();
+                return;
+            }
+            else if(event.key === 'c') {
+                this.navToCurrentSolution();
+                return;
+            }
+        });
     }
 }
 
 
 window.solution = new SolutionManager();
 window.solution.setPeriodicRefresh(10);
-
+window.solution.registerHotkeys();
 

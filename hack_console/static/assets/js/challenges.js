@@ -158,6 +158,8 @@ class ChallengeManager {
             console.log("No challenges available");
             return;
         }
+        document.getElementById("challengeIndex").innerText = this.#currentStep;
+
         // not at the first challenge
         if(this.#currentChallenge > 1) {
             document.getElementById("navToPreviousChallenge").style.display = "block";
@@ -264,10 +266,45 @@ class ChallengeManager {
         console.log("Revert response", data);
         this.refresh();
     }
+
+    registerHotkeys() {
+        // register <- and -> for navigation
+        document.addEventListener('keydown', (event) => {
+            if(event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable) {
+                // ignore when focused on input or textarea or contenteditable
+                return;
+            }
+            if(event.key === 'ArrowLeft' || event.key === 'p') {
+                if(this.#isSubSite) {
+                    this.navToCurrentChallenge();
+                    return;
+                }
+                this.navToPreviousChallenge();
+                return;
+            }
+            else if(event.key === 'ArrowRight' || event.key === 'n') {
+                this.navToNextChallenge();
+                return;
+            }
+            else if(event.key === 'c') {
+                this.navToCurrentChallenge();
+                return;
+            }
+            else if(event.key === 'a') {
+                this.approveCurrentChallenge();
+                return;
+            }
+            else if(event.key === 'r') {
+                this.revertApproval();
+                return;
+            }
+        });
+    }
 }
 
 
 window.challenge = new ChallengeManager();
 window.challenge.setPeriodicRefresh(10);
+window.challenge.registerHotkeys();
 
 

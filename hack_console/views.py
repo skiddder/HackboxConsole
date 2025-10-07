@@ -126,6 +126,15 @@ def home():
         return redirect(url_for("login"))
     return render_template("index.html", user=current_user)
 
+@app.route("/challenges")
+def challenges():
+    # if the user is not logged in, redirect to the login page
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    if not isinstance(current_user, HackBoxUser):
+        return redirect(url_for("login"))
+    return render_template("challenges.html", user=current_user)
+
 @app.route("/solutions")
 def solutions():
     if not current_user.is_authenticated:

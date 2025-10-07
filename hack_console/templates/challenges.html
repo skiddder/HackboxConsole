@@ -1,0 +1,39 @@
+{% set toolbarname = 'challenge' %}
+{% extends "layout.html" %}
+{% block title %}
+HackBox Console - Challenges
+{% endblock %}
+{% block headloadscript %}
+    <!-- Import element definition and auto-register -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
+{% endblock %}
+{% block toolbar %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn" id="navToPreviousChallenge" aria-label="Previous challenge">⟨ Prev</a>
+				<a href="#" class="pill-btn current" id="navToCurrentChallenge">Current: <span id="challengeIndex">?</span></a>
+				<a href="#" class="pill-btn" id="navToNextChallenge" aria-label="Next challenge">Next ⟩</a>
+			</div>
+            {% if user and user.is_authenticated and user.role == 'coach' %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn success" id="approveCurrentChallenge">Approve</a>
+				<a href="#" class="pill-btn warn" id="revertApproval">Revert</a>
+			</div>
+            {% endif %}
+{% endblock %}
+{% block content %}
+<h1 id="challengeTitle" class="page-title">Challenges</h1>
+
+
+
+
+<!-- Render Markdown -->
+<zero-md id="zeromd" src=""></zero-md>
+
+{% endblock %}
+
+{% block bottomloadscript %}
+<script type="text/javascript">
+    window.defaultChallengeUrl='{{ url_for("static_challenges", filename="") }}';
+</script>
+<script src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
+{% endblock %}

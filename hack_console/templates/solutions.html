@@ -1,3 +1,4 @@
+{% set toolbarname = 'solution' %}
 {% extends "layout.html" %}
 {% block title %}
 HackBox Console - Solutions
@@ -6,14 +7,15 @@ HackBox Console - Solutions
     <!-- Import element definition and auto-register -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
 {% endblock %}
+{% block toolbar %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn" id="navToPreviousSolution" aria-label="Previous solution">⟨ Prev</a>
+				<a href="#" class="pill-btn current" id="navToCurrentSolution">Current: <span id="solutionIndex">?</span></a>
+				<a href="#" class="pill-btn" id="navToNextSolution" aria-label="Next solution">Next ⟩</a>
+			</div>
+{% endblock %}
 {% block content %}
-<h1 id="challengeTitle">Challenge 1</h1>
-
-<div class="buttons spacer">
-    <a id="navToPreviousSolution" href="#" class="button">Previous</a>
-    <a id="navToCurrentSolution" href="#" class="button current">Current</a>
-    <a id="navToNextSolution" href="#" class="button">Next</a>
-</div>
+<h1 id="solutionTitle" class="page-title">Solutions</h1>
 
 
 

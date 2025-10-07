@@ -43,13 +43,17 @@
             td2.dataset.Credential = cred.Credential;
             td2.classList.add('hidden');
             td2.classList.add('credential');
+            td2.innerText = '••••••••';
+            td2.title = 'Click to reveal credential for "' + cred.name + '"';
             td2.addEventListener('click', function() {
                 this.classList.toggle('hidden');
                 if (this.classList.contains('hidden')) {
-                    this.innerText = '';
+                    this.innerText = '••••••••';
+                    this.title = 'Click to reveal credential for "' + cred.name + '"';
                 }
                 else {
                     this.innerText = this.dataset.Credential;
+                    this.title = 'Click to hide credential for "' + cred.name + '"';
                 }
             });
             tr.appendChild(td2);

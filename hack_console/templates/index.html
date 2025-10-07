@@ -6,18 +6,52 @@ HackBox Console - Challenges
     <!-- Import element definition and auto-register -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
 {% endblock %}
+{% block toolbar %}
+{% endblock %}
 {% block content %}
-<h1 id="challengeTitle">Challenge 1</h1>
-
-<div class="buttons spacer">
-    <a id="navToPreviousChallenge" href="#" class="button">Previous</a>
-    <a id="navToCurrentChallenge" href="#" class="button current">Current</a>
-    <a id="navToNextChallenge" href="#" class="button">Next</a>
-    {% if user and user.is_authenticated and user.role == 'coach' %}
-    <a id="approveCurrentChallenge" href="#" class="button danger">Approve</a>
-    <a id="revertApproval" href="#" class="button danger">Revert Approval</a>
-    {% endif %}
+<h1 class="page-title">Welcome 👋</h1>
+<p class="lead">Dive into challenges and track your progress.</p>
+<div class="card-grid">
+	<div class="card pop">
+		<h2>Get Started</h2>
+		<p>Open the Challenges section to begin your journey.</p>
+		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}
+		<a href="{{ url_for('challenges') }}" class="primary big btn" data-route="challenges">Start Now</a>
+		{% else %}
+		<a href="{{ url_for('login') }}" class="primary big btn" data-route="login">Login to Start</a>
+		{% endif %}		
+	</div>
+	<div class="card float">
+		<h2>Track Progress</h2>
+		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}
+		<p>See your current progress.</p>
+		<div class="progress-wrapper">
+			<div class="progress-label">Progress</div>
+			<div class="progress-bar" aria-label="Completion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+				<div class="progress-fill" id="progressFillHome"></div>
+			</div>
+		</div>
+		{% else %}
+		<p>Login to view your progress.</p>
+		{% endif %}
+	</div>
+	<div class="card spin-hov">
+		<h2>Tips</h2>
+		<p>
+			Use the following key shortcuts within the challenge page:
+			<ul>
+				<li><strong>C</strong>: Go to current challenge</li>
+				<li><strong>P, ←</strong>: Go to previous challenge</li>
+				<li><strong>N, →</strong>: Go to next challenge</li>
+				{% if user and user.is_authenticated and user.role == 'coach' %}
+				<li><strong>A</strong>: Approve the current challenge</li>
+				<li><strong>R</strong>: Revert approval for the current challenge</li>
+				{% endif %}
+			</ul>
+		</p>
+	</div>
 </div>
+
 
 
 
@@ -27,8 +61,5 @@ HackBox Console - Challenges
 {% endblock %}
 
 {% block bottomloadscript %}
-<script type="text/javascript">
-    window.defaultChallengeUrl='{{ url_for("static_challenges", filename="") }}';
-</script>
-<script src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/progressbar.js') }}"></script>
 {% endblock %}
