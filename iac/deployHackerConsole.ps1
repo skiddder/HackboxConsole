@@ -11,15 +11,10 @@ param (
     [string]$sku = $null,
     [string]$workerSize = $null,
 
-    [Parameter(Mandatory = $true)]
-    [string]$hackerUsername,
-    [Parameter(Mandatory = $true)]
-    [securestring]$hackerPassword,
-    [Parameter(Mandatory = $true)]
-    [string]$coachUsername,
-    [Parameter(Mandatory = $true)]
-    [securestring]$coachPassword,
-
+    [string]$hackerUsername = "",
+    [securestring]$hackerPassword = $null,
+    [string]$coachUsername = "",
+    [securestring]$coachPassword = $null,
 
     [switch]$doNotCleanUp
 )
@@ -35,6 +30,22 @@ if(-not (Test-Path $SourceSolutionsDir -PathType Container)) {
     throw "SourceSolutionsDir must be a directory"
 }
 
+
+# does the file exist?
+if(-not (Test-Path (Join-Path $consoleRoot "user.json") -PathType Leaf)) {
+    if($hackerUsername -eq "" -or $coachUsername -eq "" -or $hackerPassword -eq $null -or $coachPassword -eq $null) {
+         throw "Either provide the user.json file or provide all four parameters: hackerUsername, hackerPassword, coachUsername, coachPassword"
+    }
+}
+else {
+    if($hackerUsername -ne "" -or $coachUsername -ne "" -or $hackerPassword -ne $null -or $coachPassword -ne $null) {
+        Write-Warning "Both user.json file and user parameters provided. The user.json file will be used."
+    }
+    $hackerUsername = "hacker"
+    $hackerPassword = ConvertTo-SecureString -String "hackerPassword" -AsPlainText -Force
+    $coachUsername = "coach"
+    $coachPassword = ConvertTo-SecureString -String "coachPassword" -AsPlainText -Force
+}
 
 
 Write-Host "Copying challenges and solutions to the console"
