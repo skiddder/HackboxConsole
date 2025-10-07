@@ -1,6 +1,8 @@
 # HackBox Console
 
-![HackBox Console](./hackbox.jpg)
+![HackBox Console Main](./hackbox.jpg)
+
+![HackBox Console Challenge View](./hackbox2.jpg)
 
 A portal for **Hackathon participants** to access challenges and credentials.
 
