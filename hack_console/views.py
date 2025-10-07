@@ -12,12 +12,12 @@ import natsort
 challenges_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "challenges")
 solutions_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "solutions")
 
-def recursive_list_md_files(directory: str, starts_with: str = "") -> list:
+def recursive_list_md_files(directory: str, contains_str: str = "") -> list:
     files = []
     for root, _, filenames in os.walk(directory):
         for filename in filenames:
             if filename.endswith(".md"):
-                if starts_with == "" or filename.startswith(starts_with):
+                if contains_str == "" or contains_str in filename:
                     f = os.path.join(root, filename)
                     if f.startswith(directory):
                         f = f[len(directory):]
