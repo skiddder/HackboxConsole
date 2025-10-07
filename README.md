@@ -27,6 +27,10 @@ Thanks to [zero-md](https://github.com/zerodevx/zero-md) the markdown files are 
 
 ## How to build & Deploy
 
+Have a directory containing the challenges. It will walk through the directory (including subdirectories) and look for files named ``*challenge*.md``.
+Have a directory containing the solutions. It will walk through the directory (including subdirectories) and look for files named ``*solution*.md``.
+
+
 Deploy the console with the markdown files from the ContosoHotelOpenHack repository
 ```pwsh
 .\iac\deployHackerConsole.ps1 `
