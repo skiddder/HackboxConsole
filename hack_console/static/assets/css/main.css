@@ -197,6 +197,7 @@ body {
   border-radius:var(--radius-md);
   overflow:hidden;
   box-shadow:var(--shadow-soft);
+  margin-bottom: 2rem;
 }
 .credentials th {
   font-family:var(--font-display);
