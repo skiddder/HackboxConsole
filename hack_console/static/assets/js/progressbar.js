@@ -147,4 +147,4 @@ class ProgressBarManager {
 
 
 window.progressbars = new ProgressBarManager('.progress-bar');
-// window.progressbars.setPeriodicRefresh(10);
+window.progressbars.setPeriodicRefresh(10);
