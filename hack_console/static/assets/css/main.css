@@ -422,3 +422,39 @@ body {
   outline:none;
   box-shadow:var(--shadow-focus);
 }
+
+
+
+/* zero md */
+
+zero-md {
+  display:block;
+  background:var(--color-surface);
+  margin:2rem 0;
+  padding:1.6rem clamp(1rem, 4vw, 2rem);
+  border-radius:var(--radius-lg);
+  position:relative;
+  box-shadow:var(--shadow-soft);
+  overflow:hidden;
+}
+
+zero-md::before {
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border-radius:inherit;
+  background:--color-surface;
+  z-index:-1;
+  filter:blur(0.5px);
+}
+
+@media (max-width:800px) {
+  zero-md {
+    margin:1.4rem 0;
+    padding:1.2rem;
+    box-shadow:none;
+  }
+  zero-md::before {
+    display:none;
+  }
+}
