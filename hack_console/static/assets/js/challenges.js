@@ -17,6 +17,12 @@ class ChallengeManager {
         if(document.getElementById("revertApproval")) {
             document.getElementById("revertApproval").addEventListener("click", this.revertApproval.bind(this));
         }
+        if(document.getElementById("approveAllChallenges")) {
+            document.getElementById("approveAllChallenges").addEventListener("click", this.approveAllChallenges.bind(this));
+        }
+        if(document.getElementById("revertAllApprovals")) {
+            document.getElementById("revertAllApprovals").addEventListener("click", this.revertAllApprovals.bind(this));
+        }
 
         this.#setZeroMdListener();
 
@@ -178,7 +184,7 @@ class ChallengeManager {
         else {
             document.getElementById("navToNextChallenge").style.display = "none";
         }
-        // not at the last approved challenge
+        // approve - not at the last approved challenge
         if(document.getElementById("approveCurrentChallenge")) {
             if(this.#currentStep < this.#challenges.length) {
                 document.getElementById("approveCurrentChallenge").style.display = "block";
@@ -188,13 +194,31 @@ class ChallengeManager {
             }
 
         }
-        // not at the first approved challenge
+        // approve all - not at the last approved challenge
+        if(document.getElementById("approveAllChallenges")) {
+            if(this.#currentStep < this.#challenges.length) {
+                document.getElementById("approveAllChallenges").style.display = "block";
+            }
+            else {
+                document.getElementById("approveAllChallenges").style.display = "none";
+            }
+        }
+        // revert - not at the first approved challenge
         if(document.getElementById("revertApproval")) {
             if(this.#currentStep > 1) {
                 document.getElementById("revertApproval").style.display = "block";
             }
             else {
                 document.getElementById("revertApproval").style.display = "none";
+            }
+        }
+        // revert all - not at the first approved challenge
+        if(document.getElementById("revertAllApprovals")) {
+            if(this.#currentStep > 1) {
+                document.getElementById("revertAllApprovals").style.display = "block";
+            }
+            else {
+                document.getElementById("revertAllApprovals").style.display = "none";
             }
         }
 
@@ -239,32 +263,38 @@ class ChallengeManager {
         }
     }
 
-    async approveCurrentChallenge() {
+    async #setApprovedChallenge(challenge) {        
         var data = await fetch("/api/set/challenge", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "challenge": "increase"
+                "challenge": challenge
             })
         }).then(response => response.json());
-        console.log("Approve response", data);
+        console.log("Set challenge response", data);
         this.refresh();
     }
 
+    async approveAllChallenges() {
+        console.log("Approve all challenges");
+        await this.#setApprovedChallenge("last");
+    }
+
+    async revertAllApprovals() {
+        console.log("Revert all approvals");
+        await this.#setApprovedChallenge("first");
+    }
+
+    async approveCurrentChallenge() {
+        console.log("Approve current challenge");
+        await this.#setApprovedChallenge("increase");
+    }
+
     async revertApproval() {
-        var data = await fetch("/api/set/challenge", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "challenge": "decrease"
-            })
-        }).then(response => response.json());
-        console.log("Revert response", data);
-        this.refresh();
+        console.log("Revert approval");
+        await this.#setApprovedChallenge("decrease");
     }
 
     registerHotkeys() {
