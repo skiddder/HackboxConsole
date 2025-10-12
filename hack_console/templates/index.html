@@ -10,7 +10,7 @@ HackBox Console - Challenges
 <h1 class="page-title">Welcome 👋</h1>
 <p class="lead">Dive into challenges and track your progress.</p>
 <div class="card-grid">
-	<div class="card pop">
+	<div class="card washed pop">
 		<h2>Get Started</h2>
 		<p>Open the Challenges section to begin your journey.</p>
 		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}
@@ -19,7 +19,7 @@ HackBox Console - Challenges
 		<a href="{{ url_for('login') }}" class="primary big btn" data-route="login">Login to Start</a>
 		{% endif %}		
 	</div>
-	<div class="card float">
+	<div class="card washed float">
 		<h2>Track Progress</h2>
 		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}
 		<p>See your current progress.</p>
@@ -33,7 +33,7 @@ HackBox Console - Challenges
 		<p>Login to view your progress.</p>
 		{% endif %}
 	</div>
-	<div class="card spin-hov">
+	<div class="card washed spin-hov">
 		<h2>Tips</h2>
 		<p>
 			Use the following key shortcuts within the challenge page:
@@ -53,7 +53,6 @@ HackBox Console - Challenges
 	<h2 class="celebration-header">Congratulations you have completed all challenges! 🎉</h2>
 	<img src="{{ url_for('static', filename='assets/img/challengesCompleted.jpg') }}" alt="Hackathon Challenges Completed" title="Hackathon Challenges Completed" class="celebration-image" />
 </div>
-
 
 {% endblock %}
 

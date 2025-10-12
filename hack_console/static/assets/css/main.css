@@ -136,7 +136,7 @@ body {
   overflow:hidden;
   transition:var(--transition-med), transform var(--transition-fast);
 }
-.card:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.9),transparent 55%),radial-gradient(circle at 12% 90%,rgba(255,255,255,.7),transparent 70%); opacity:.6; pointer-events:none; }
+.card.washed:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.9),transparent 55%),radial-gradient(circle at 12% 90%,rgba(255,255,255,.7),transparent 70%); opacity:.6; pointer-events:none; }
 .card h2 { margin:.2rem 0 .6rem; font-family:var(--font-display); font-size:1.3rem; }
 .card p { margin:0 0 .75rem; font-size:.95rem; }
 .card:hover { transform:translateY(-6px) rotate(-.6deg); }
