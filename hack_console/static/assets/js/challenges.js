@@ -4,7 +4,7 @@ class ChallengeManager {
     #currentChallenge = null;
     #refreshSeconds = 0;
     #refreshTimeout = null;
-    #isSubSite = true;
+    #isSubSite = false;
     constructor() {
         document.getElementById("navToPreviousChallenge").style.display = "none";
         document.getElementById("navToPreviousChallenge").addEventListener("click", this.navToPreviousChallenge.bind(this));
@@ -109,7 +109,7 @@ class ChallengeManager {
                     }
                     this.#currentStep = currentStep;
                     if(this.#currentChallenge === null) {
-                        this.#currentChallenge = this.#currentStep;
+                        this.#currentChallenge = Math.max(1, Math.min(this.#currentStep, this.#challenges.length));
                         requiresRendering = true;
 
                     }
@@ -245,6 +245,7 @@ class ChallengeManager {
         if(document.getElementById("challengeTitle")) {
             document.getElementById("challengeTitle").innerText = "Challenge " + realcurrentChallenge;
         }
+        this.#isSubSite = false;
         document.getElementById("zeromd").src = mdUrl;
     }
 
@@ -258,7 +259,7 @@ class ChallengeManager {
     navToCurrentChallenge() {
         if(this.#currentChallenge !== this.#currentStep || this.#isSubSite) {
             this.#isSubSite = false;
-            this.#currentChallenge = this.#currentStep;
+            this.#currentChallenge = Math.max(1, Math.min(this.#currentStep, this.#challenges.length));
             this.#render();
         }
     }

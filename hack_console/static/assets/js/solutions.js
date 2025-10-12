@@ -97,7 +97,7 @@ class SolutionManager {
                     }
                     this.#currentStep = currentStep;
                     if(this.#currentSolution === null) {
-                        this.#currentSolution = this.#currentStep;
+                        this.#currentSolution = Math.max(1, Math.min(this.#currentStep, this.#solutions.length));
                         requiresRendering = true;
 
                     }
@@ -196,6 +196,7 @@ class SolutionManager {
         if(document.getElementById("solutionTitle")) {
             document.getElementById("solutionTitle").innerText = "Solution " + realcurrentSolution;
         }
+        this.#isSubSite = false;
         document.getElementById("zeromd").src = mdUrl;        
     }
 
@@ -209,7 +210,7 @@ class SolutionManager {
     navToCurrentSolution() {
         if(this.#currentSolution !== this.#currentStep || this.#isSubSite) {
             this.#isSubSite = false;
-            this.#currentSolution = this.#currentStep;
+            this.#currentSolution = Math.max(1, Math.min(this.#currentStep, this.#solutions.length));
             this.#render();
         }
     }
