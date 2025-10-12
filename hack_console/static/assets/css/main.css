@@ -126,7 +126,7 @@ body {
 .page-title { font-family:var(--font-display); font-weight:700; font-size:clamp(2.2rem,5vw,3.3rem); margin:.2rem 0 1rem; background:linear-gradient(90deg,#ff6f5e,#ffb663,#ffc866,#ffe47a); background-clip:text; -webkit-background-clip:text; color:transparent; }
 .lead { font-size:1.15rem; max-width:720px; color:var(--color-text-soft); }
 
-.card-grid { display:grid; gap:1.3rem; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); margin-top:1.4rem; }
+.card-grid { display:grid; gap:1.3rem; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); margin-top:1.4rem; margin-bottom:1.4rem;}
 .card {
   position:relative;
   background:var(--color-surface);
@@ -457,4 +457,24 @@ zero-md::before {
   zero-md::before {
     display:none;
   }
+}
+
+
+
+/* celebration-image is max-width screensize and max-height screenheight  */
+.celebration-image {
+  max-width: 100%;
+  max-height: 70vh;
+  display: block;
+  margin: 1rem auto 0;
+}
+.celebration-header, .card h2.celebration-header {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2rem,5vw,3rem);
+  font-weight: 700;
+  background: linear-gradient(90deg, #ff6f5e, #ffb663);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }

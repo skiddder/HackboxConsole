@@ -5,6 +5,7 @@ class ProgressBarManager {
     #progressBarElements = [];
     #refreshSeconds = 0;
     #refreshTimeout = null;
+    #progressBarUpdateListeners = [];
     constructor(progressBarCssSelector) {
         this.#progressBarElements = document.querySelectorAll(progressBarCssSelector);
         this.#progressBarElements.forEach(el => {
@@ -79,16 +80,21 @@ class ProgressBarManager {
         this.#progressBarElements.forEach(el => {
             console.log("Rendering element", el);
             try {
-                el.setAttribute('aria-valuenow', String(this.#currentStep));
-                el.setAttribute('aria-tooltip', `Working on challenge ${this.#currentStep} out of ${this.#challenges.length} challenges`);
-                el.setAttribute('title', `Working on challenge ${this.#currentStep} out of ${this.#challenges.length} challenges`);
+                el.setAttribute('aria-valuenow', String(Math.max(this.#currentStep - 1, 0)));
+                if(this.#currentStep <= this.#challenges.length) {
+                    el.setAttribute('aria-tooltip', `Working on challenge ${this.#currentStep} out of ${this.#challenges.length} challenges`);
+                    el.setAttribute('title', `Working on challenge ${this.#currentStep} out of ${this.#challenges.length} challenges`);
+                }
+                else {
+                    el.setAttribute('aria-tooltip', `All challenges completed!`);
+                    el.setAttribute('title', `All challenges completed!`);
+                }
                 el.setAttribute('aria-valuemin', '0');
                 el.setAttribute('aria-valuemax', String(this.#challenges.length));
                 var nowval = parseInt(el.getAttribute('aria-valuenow'));
                 var minval = parseInt(el.getAttribute('aria-valuemin'));
                 var maxval = parseInt(el.getAttribute('aria-valuemax'));
-                var percent = ((nowval - minval) / (maxval - minval)) * 100;
-                percent = Math.round(percent);
+                var percent = Math.round(((nowval - minval) / (maxval - minval)) * 100);
                 if(percent < 0) {
                     percent = 0;
                 }
@@ -98,6 +104,14 @@ class ProgressBarManager {
                 el.querySelector('.progress-fill').style.width = percent + '%';
             }
             catch {}
+            finally {
+                this.#progressBarUpdateListeners.forEach(l => {
+                    try {
+                        l(el, minval, maxval, nowval, percent);
+                    }
+                    catch {}
+                });
+            }
         });
     }
 
@@ -143,6 +157,11 @@ class ProgressBarManager {
         return this.#refreshSeconds;
     }
 
+    addProgressBarUpdateListener(listener) {
+        if(typeof listener === 'function') {
+            this.#progressBarUpdateListeners.push(listener);
+        }
+    }
 }
 
 

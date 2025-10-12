@@ -153,7 +153,12 @@ class SolutionManager {
             return;
         }
 
-        document.getElementById("solutionIndex").innerText = this.#currentSolution;
+        if(this.#currentStep > this.#solutions.length) {
+            document.getElementById("solutionIndex").innerText = "All done! 🎉";
+        }
+        else {
+            document.getElementById("solutionIndex").innerText = this.#currentSolution;
+        }
 
         // not at the first challenge
         if(this.#currentSolution > 1) {
@@ -181,14 +186,15 @@ class SolutionManager {
         if(mdUrl.endsWith("/")) {
             mdUrl = mdUrl.substring(0, mdUrl.length - 1);
         }
-        if(this.#solutions[this.#currentSolution - 1].startsWith("/")) {
-            mdUrl += this.#solutions[this.#currentSolution - 1];
+        var realcurrentSolution = Math.max(1, Math.min(this.#currentSolution, this.#solutions.length));
+        if(this.#solutions[realcurrentSolution - 1].startsWith("/")) {
+            mdUrl += this.#solutions[realcurrentSolution - 1];
         }
         else {
-            mdUrl += "/" + this.#solutions[this.#currentSolution - 1];
+            mdUrl += "/" + this.#solutions[realcurrentSolution - 1];
         }
         if(document.getElementById("solutionTitle")) {
-            document.getElementById("solutionTitle").innerText = "Solution " + this.#currentSolution;
+            document.getElementById("solutionTitle").innerText = "Solution " + realcurrentSolution;
         }
         document.getElementById("zeromd").src = mdUrl;        
     }

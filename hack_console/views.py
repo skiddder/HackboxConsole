@@ -220,9 +220,9 @@ def api_set_challenge():
         elif str(data["challenge"]).lower().strip() == "first":
             data["challenge"] = 1
         elif str(data["challenge"]).lower().strip() == "last":
-            data["challenge"] = len(challenges_mds)
+            data["challenge"] = len(challenges_mds) + 1
         data["challenge"] = int(data["challenge"])
-        if data["challenge"] < 1 or data["challenge"] > len(challenges_mds):
+        if data["challenge"] < 1 or data["challenge"] > len(challenges_mds) + 1:
             return jsonify({"success": False, "error": "Challenge not found"}), 404
         hbSettings.setStep(data["challenge"])
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})

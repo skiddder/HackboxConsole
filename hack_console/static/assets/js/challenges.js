@@ -164,7 +164,13 @@ class ChallengeManager {
             console.log("No challenges available");
             return;
         }
-        document.getElementById("challengeIndex").innerText = this.#currentStep;
+
+        if(this.#currentStep > this.#challenges.length) {
+            document.getElementById("challengeIndex").innerText = "All done! 🎉";
+        }
+        else {
+            document.getElementById("challengeIndex").innerText = this.#currentStep;
+        }
 
         // not at the first challenge
         if(this.#currentChallenge > 1) {
@@ -186,7 +192,7 @@ class ChallengeManager {
         }
         // approve - not at the last approved challenge
         if(document.getElementById("approveCurrentChallenge")) {
-            if(this.#currentStep < this.#challenges.length) {
+            if(this.#currentStep < this.#challenges.length + 1) {
                 document.getElementById("approveCurrentChallenge").style.display = "block";
             }
             else {
@@ -196,7 +202,7 @@ class ChallengeManager {
         }
         // approve all - not at the last approved challenge
         if(document.getElementById("approveAllChallenges")) {
-            if(this.#currentStep < this.#challenges.length) {
+            if(this.#currentStep < this.#challenges.length + 1) {
                 document.getElementById("approveAllChallenges").style.display = "block";
             }
             else {
@@ -229,14 +235,15 @@ class ChallengeManager {
         if(mdUrl.endsWith("/")) {
             mdUrl = mdUrl.substring(0, mdUrl.length - 1);
         }
-        if(this.#challenges[this.#currentChallenge - 1].startsWith("/")) {
-            mdUrl += this.#challenges[this.#currentChallenge - 1];
+        var realcurrentChallenge = Math.max(1, Math.min(this.#currentChallenge, this.#challenges.length));
+        if(this.#challenges[realcurrentChallenge - 1].startsWith("/")) {
+            mdUrl += this.#challenges[realcurrentChallenge - 1];
         }
         else {
-            mdUrl += "/" + this.#challenges[this.#currentChallenge - 1];
+            mdUrl += "/" + this.#challenges[realcurrentChallenge - 1];
         }
         if(document.getElementById("challengeTitle")) {
-            document.getElementById("challengeTitle").innerText = "Challenge " + this.#currentChallenge;
+            document.getElementById("challengeTitle").innerText = "Challenge " + realcurrentChallenge;
         }
         document.getElementById("zeromd").src = mdUrl;
     }
