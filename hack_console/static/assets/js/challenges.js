@@ -130,10 +130,13 @@ class ChallengeManager {
     }
 
     #closeDialog() {
-        if(document.getElementById("challengeDialog")) {
-            let dialog = document.getElementById("challengeDialog");
-            dialog.classList.remove("show");
+        try {
+            if(document.getElementById("challengeDialog")) {
+                let dialog = document.getElementById("challengeDialog");
+                dialog.classList.remove("show");
+            }
         }
+        catch {}
     }
     #acceptDialog() {
         this.navToCurrentChallenge();
@@ -159,6 +162,7 @@ class ChallengeManager {
                 dialog.classList.add("show");
             }
             catch {
+                this.#closeDialog();
                 alert(message);
             }
         }
