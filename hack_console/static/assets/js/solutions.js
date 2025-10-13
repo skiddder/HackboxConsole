@@ -115,11 +115,15 @@ class SolutionManager {
         }
     }
 
+    #showDialog(message) {
+        alert(message);
+    }
+
     #informUserOfNewStep() {
-        alert("Solution got approved, you have unlocked another solution!");
+        this.#showDialog("Solution got approved, you have unlocked another solution!");
     }
     #informUserOfRevokedStep() {
-        alert("Solution got revoked, back to the previous solution!");
+        this.#showDialog("Solution got revoked, back to the previous solution!");
     }
 
     #setRefreshTimer() {

@@ -100,9 +100,11 @@ class ChallengeManager {
                         requiresRendering = true;
                         if(this.#currentStep !== null) {
                             if(currentStep > this.#currentStep ) {
+                                this.#currentStep = currentStep; // ensure that the current step is updated before informing the user
                                 this.#informUserOfNewStep();
                             }
                             else {
+                                this.#currentStep = currentStep; // ensure that the current step is updated before informing the user
                                 this.#informUserOfRevokedStep();
                             }
                         }                            
@@ -127,11 +129,54 @@ class ChallengeManager {
         }
     }
 
+    #closeDialog() {
+        if(document.getElementById("challengeDialog")) {
+            let dialog = document.getElementById("challengeDialog");
+            dialog.classList.remove("show");
+        }
+    }
+    #acceptDialog() {
+        this.navToCurrentChallenge();
+        this.#closeDialog();
+    }
+
+    #showDialog(message, title="Challenge Update") {
+        if(document.getElementById("challengeDialog")) {
+            try {
+                let dialog = document.getElementById("challengeDialog");
+                if(dialog.querySelector("button.dialog-close")) {
+                    dialog.querySelector("button.dialog-close").onclick = this.#closeDialog.bind(this);
+                }
+                if(dialog.querySelector("button.cancel-dialog")) {
+                    dialog.querySelector("button.cancel-dialog").onclick = this.#closeDialog.bind(this);
+                }
+                if(dialog.querySelector("button.accept-dialog")) {
+                    dialog.querySelector("button.accept-dialog").onclick = this.#acceptDialog.bind(this);
+                }
+                dialog.classList.remove("show");
+                dialog.querySelector(".dialog-title").innerText = title;
+                dialog.querySelector(".dialog-body").innerText = message;
+                dialog.classList.add("show");
+            }
+            catch {
+                alert(message);
+            }
+        }
+        else {
+            alert(message);
+        }
+    }
+
     #informUserOfNewStep() {
-        alert("Solution got approved, you have unlocked another challenge!");
+        if(this.#currentStep > this.#challenges.length) {
+            this.#showDialog("Congratulations! What an achievement! You have completed all challenges! 🎉", "Challenges completed 🎉");
+        }
+        else {
+            this.#showDialog("Solution got approved, you have unlocked another challenge! 🎉", "Challenge unlocked 🎉");
+        }
     }
     #informUserOfRevokedStep() {
-        alert("Challenge got revoked, back to the previous challenge!");
+        this.#showDialog("Challenge got revoked, back to the previous challenge! 😞", "Challenge revoked");
     }
 
     #setRefreshTimer() {
@@ -312,6 +357,7 @@ class ChallengeManager {
                 // ignore when focused on input or textarea or contenteditable
                 return;
             }
+            this.#closeDialog(); // in case the dialog is open, close it
             if(event.key === 'ArrowLeft' || event.key === 'p') {
                 if(this.#isSubSite) {
                     this.navToCurrentChallenge();
