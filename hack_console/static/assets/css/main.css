@@ -43,12 +43,13 @@ body {
 
 
 .loginErrorBox {
-  border: 1px solid red;
-  background-color: #ffdddd;
+  border: 1px solid rgba(255, 109, 96, 0.35);
+  background: linear-gradient(135deg, rgba(255, 109, 96, 0.12), rgba(255, 180, 99, 0.18));
   padding: 10px;
   margin-bottom: 15px;
   border-radius: var(--radius-md);
-  color: red;
+  color: var(--color-error);
+  box-shadow: 0 8px 18px -10px rgba(255, 109, 96, 0.55), 0 4px 10px -6px rgba(255, 182, 102, 0.45);
 }
 
 .top-bar {
