@@ -157,7 +157,7 @@ class SolutionManager {
             document.getElementById("solutionIndex").innerText = "All done! 🎉";
         }
         else {
-            document.getElementById("solutionIndex").innerText = this.#currentSolution;
+            document.getElementById("solutionIndex").innerText = this.#currentStep;
         }
 
         // not at the first challenge
