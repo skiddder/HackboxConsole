@@ -11,7 +11,7 @@ HackBox Console - Challenges
 <p class="lead">Dive into challenges and track your progress.</p>
 <div class="card-grid">
 	<div class="card washed pop">
-		<h2>Get Started</h2>
+		<h2>Get Started{% if user and user.is_authenticated %} {{ user.username }}{% endif %}</h2>
 		<p>Open the Challenges section to begin your journey.</p>
 		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}
 		<a href="{{ url_for('challenges') }}" class="primary big btn" data-route="challenges">Start Now</a>
