@@ -19,10 +19,13 @@ class HackBoxUser(UserMixin):
     username = ""
     password = ""
     role = ""
-    def __init__(self, username, password, role):
+    tenant = "Default"
+    def __init__(self, username, password, role, tenant = "Default"):
         self.username = str(username).lower().strip()
         self.password = str(password)
         self.role = str(role).lower().strip()
+        self.role = role if role in ["hacker", "coach"] else "hacker"
+        self.tenant = str(tenant).strip()
         self.id = str(username).lower().strip()
 
 def create_all_users():
@@ -34,14 +37,19 @@ def create_all_users():
         with open(userJson, "r") as f:
             for usr in json.load(f):
                 if "username" in usr and "password" in usr and "role" in usr:
+                    if "tenant" in usr:
+                        tenant = str(usr["tenant"]).strip()
+                    else:
+                        tenant = "Default"
                     role = str(usr["role"]).lower().strip()
                     if role not in ["hacker", "coach"]:
                         role = "hacker"
-                    print(f"Adding user {usr['username']} with role {role}")
+                    print(f"Adding user {usr['username']} with role {role} and tenant {tenant}")
                     allUsers[str(usr["username"]).lower().strip()] = HackBoxUser(
                         str(usr["username"]),
                         str(usr["password"]),
-                        role
+                        role,
+                        tenant
                     )
     # do not load the default users from the enviornment, if the user.json file exists
     if len(allUsers) > 0:

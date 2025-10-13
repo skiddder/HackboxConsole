@@ -30,40 +30,52 @@ def recursive_list_md_files(directory: str, contains_str: str = "") -> list:
 challenges_mds = recursive_list_md_files(challenges_dir, "challenge")
 solutions_mds = recursive_list_md_files(solutions_dir, "solution")
 
+
 class HackBoxCredentials:
     _tsc = None
     _tc  = None
-    _lastGeneratedCustomerId = ""
+    _tenantName = "Default"
 
-    def __init__(self):
+    def __init__(self, tenantName : str = "Default"):
         self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("credentials")
-    
+        self._tenantName = str(tenantName).strip()
+        if self._tenantName == "":
+            self._tenantName = "Default"
+
+    def sanitizeName(self, key: str) -> str:
+        return "".join([c for c in key if c.isalnum() or c == "_" or c == "-" or c == " "]).strip()
+
+    def sanitizeGroup(self, group: str) -> str:
+        return "".join([c for c in group if c.isalnum() or c == "_" or c == "-"]).strip()
+
     def add(self, name: str, credential: str, group: str = "Default") -> None:
-        self._tc.upsert_entity(mode="replace", entity={"PartitionKey": group, "RowKey": name, "Credential": credential})
+        name = self.sanitizeName(name)
+        group = self.sanitizeGroup(group)
+        self._tc.upsert_entity(mode="replace", entity={"PartitionKey": self._tenantName, "RowKey": group + "|" + name, "group": group, "name": name, "Credential": credential})
         return self
     def get(self, name: str, group: str = "Default") -> Union[Dict[str, str], None]:
+        name = self.sanitizeName(name)
+        group = self.sanitizeGroup(group)
         try:
-            entity = self._tc.get_entity(row_key=name, partition_key=group)
+            entity = self._tc.get_entity(row_key=group + "|" + name, partition_key=self._tenantName)
+            del entity["PartitionKey"]
+            del entity["RowKey"]
             return entity
         except ResourceNotFoundError:
             return None
     def getGroup(self, group : str = "Default") -> Dict[str, Dict[str, str]]:
-        group = "".join([c for c in group if c.isalnum() or c == "_"])
+        group = self.sanitizeGroup(group)
         
         entities = {}
-        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{group}'"):
-            entity["group"] = entity["PartitionKey"]
-            entity["name"] = entity["RowKey"]
+        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{self._tenantName}' and group eq '{group}'"):
             del entity["PartitionKey"]
             del entity["RowKey"]
             entities[entity["name"]] = entity
         return entities
     def getAll(self) -> Dict[str, Dict[str, str]]:
         entities = []
-        for entity in self._tc.list_entities(results_per_page=1000):
-            entity["group"] = entity["PartitionKey"]
-            entity["name"] = entity["RowKey"]
+        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{self._tenantName}'"):
             del entity["PartitionKey"]
             del entity["RowKey"]
             entities.append(entity)
@@ -72,12 +84,22 @@ class HackBoxCredentials:
 class HackBoxSettings:
     _tsc = None
     _tc  = None
-    _lastGeneratedCustomerId = ""
+    _tenantName = "Default"
 
-    def __init__(self):
+    def __init__(self, tenantName : str = "Default"):
         self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("settings")
+        self._tenantName = str(tenantName).strip()
+        self._tenantName = "".join([c for c in self._tenantName if c.isalnum() or c == "_" or c == "-" ]).strip()
+        if self._tenantName == "":
+            self._tenantName = "Default"
     
+    def sanitizeKey(self, key: str) -> str:
+        return "".join([c for c in key if c.isalnum() or c == "_" or c == "-" or c == " "]).strip()
+    
+    def sanitizeGroup(self, group: str) -> str:
+        return "".join([c for c in group if c.isalnum() or c == "_" or c == "-"]).strip()
+
     def setStep(self, step: int):
         if step < 1:
             raise ValueError("Step cannot be less than 1")
@@ -92,21 +114,26 @@ class HackBoxSettings:
         return step["Step"]
     
     def set(self, key: str, value: Dict[str, Union[str, int, bool]], group : str = "Default") -> None:
-        self._tc.upsert_entity(mode="replace", entity={"PartitionKey": group, "RowKey": key, **value})
+        key = self.sanitizeKey(key)
+        group = self.sanitizeGroup(group)
+        value["key"] = key
+        value["group"] = group
+        self._tc.upsert_entity(mode="replace", entity={"PartitionKey": self._tenantName, "RowKey": group + "|" + key, **value})
         return self
     def get(self, key, group : str = "Default") -> Union[Dict[str, Union[str, int, bool]], None]:
+        key = self.sanitizeKey(key)
+        group = self.sanitizeGroup(group)
         try:
-            entity = self._tc.get_entity(row_key=key, partition_key=group)
+            entity = self._tc.get_entity(row_key=group + "|" + key, partition_key=self._tenantName)
+            del entity["PartitionKey"]
+            del entity["RowKey"]
             return entity
         except ResourceNotFoundError:
             return None
-    def getGroup(self, group : str = "Default") -> Dict[str, Union[str, int, bool]]:
-        group = "".join([c for c in group if c.isalnum() or c == "_"])
-        
+    def getGroup(self, group: str = "Default") -> Dict[str, Union[str, int, bool]]:
+        group = self.sanitizeGroup(group)
         entities = {}
-        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{group}'"):
-            entity["group"] = entity["PartitionKey"]
-            entity["key"] = entity["RowKey"]
+        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{self._tenantName}' and group eq '{group}'"):
             del entity["PartitionKey"]
             del entity["RowKey"]
             entities[entity["key"]] = entity
@@ -193,7 +220,7 @@ def api_get_challenge():
         logout_user()
         return redirect(url_for("login"))
     try:
-        hbSettings = HackBoxSettings()
+        hbSettings = HackBoxSettings(current_user.tenant)
         hbSettings.getStep()
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})
     except Exception as e:
@@ -212,7 +239,7 @@ def api_set_challenge():
         data = request.get_json()
         if "challenge" not in data:
             return jsonify({"success": False, "error": "Missing challenge"}), 400
-        hbSettings = HackBoxSettings()
+        hbSettings = HackBoxSettings(current_user.tenant)
         if str(data["challenge"]).lower().strip() == "decrease":
             data["challenge"] = hbSettings.getStep() - 1
         elif str(data["challenge"]).lower().strip() == "increase":
@@ -257,14 +284,17 @@ def api_credentials():
         return redirect(url_for("login"))
     if current_user.role not in ["coach", "hacker"]:
         return jsonify({"error": "Unauthorized"}), 403
-    hbCredentials = HackBoxCredentials()
+    hbCredentials = HackBoxCredentials(current_user.tenant)
     return jsonify(hbCredentials.getAll())
 
 @login_required
 @app.route("/api/settings", defaults={'group': "Default"})
 @app.route("/api/settings/<group>", defaults={'group': "Default"})
 def api_config(group : str = 'Default'):
-    hbSettings = HackBoxSettings()
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    hbSettings = HackBoxSettings(current_user.tenant)
     return jsonify(hbSettings.getGroup(group))
 #endregion -------- API ENDPOINTS --------
 
@@ -289,13 +319,13 @@ def static_challenges(filename):
         # additional check for hackers (they can only see the challenges that are available)
         if current_user.role == "hacker":
             # file name should be challenge*.md
-            if filename.endswith(".md") and (filename.split("/")[-1]).startswith("challenge"):
+            if filename.endswith(".md") and "challenge" in filename.split("/")[-1]:
                 # is it in the list of challenges?
                 if filename in challenges_mds:
                     # get the position in the array
                     idx = challenges_mds.index(filename) + 1
                     # get the current challenge
-                    hbSettings = HackBoxSettings()
+                    hbSettings = HackBoxSettings(current_user.tenant)
                     current_challenge = hbSettings.getStep()
                     # if the challenge is not available, return an error
                     if idx > current_challenge:

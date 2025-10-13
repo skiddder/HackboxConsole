@@ -2,11 +2,13 @@
     {
         "username": "admin",
         "password": "admin",
-        "role": "coach"
+        "role": "coach",
+        "tenant": "Default"
     },
     {
         "username": "user",
         "password": "user",
-        "role": "hacker"
+        "role": "hacker",
+        "tenant": "Default"
     }
 ]
