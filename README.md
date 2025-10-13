@@ -32,22 +32,32 @@ Have a directory containing the solutions. It will walk through the directory (i
 
 
 Deploy the console with the markdown files from the ContosoHotelOpenHack repository
+Either run for a single tenant (one team, one coach)
 ```pwsh
+# for single tenant run:
 .\iac\deployHackerConsole.ps1 `
     -SourceChallengesDir ..\ContosoHotelOpenHack\challenges\ `
     -SourceSolutionsDir ..\ContosoHotelOpenHack\solutions\ `
-    -ResourceGroupName "hackathonconsole" `
     -hackerUsername "hacker" `
     -hackerPassword ("hacker" | ConvertTo-SecureString -AsPlainText -Force) `
     -coachUsername "coach" `
     -coachPassword ("coach" | ConvertTo-SecureString -AsPlainText -Force)
+```
+Or run for multiple tenants (multiple teams with one coach each)
+```pwsh
+# for multi tenant create the users.json first
+.\iac\createUsers.ps1 -numberOfTenants 3 -baseHackerUsername "hacker" -baseCoachUsername "coach"
+# for multi tenant run:
+.\iac\deployHackerConsole.ps1 `
+    -SourceChallengesDir ..\ContosoHotelOpenHack\challenges\ `
+    -SourceSolutionsDir ..\ContosoHotelOpenHack\solutions\
 ```
 
 Publish additional credentials to the storage account in this example the name of the credential is ``Example Password`` with the (secret) value ``DontTellAnyone``
 ```pwsh
 .\iac\addCredential.ps1 `
     -storageAccountName "storage...." `
-    -ResourceGroupName "hackathonconsole" `
     -name "Example Password" `
     -value "DontTellAnyone"
+# for multi tenant please also add: -tenant "team1"
 ```

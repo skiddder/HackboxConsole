@@ -3,8 +3,7 @@ param (
     [string]$SourceChallengesDir,
     [Parameter(Mandatory = $true)]
     [string]$SourceSolutionsDir,
-    [Parameter(Mandatory = $true)]
-    [string]$ResourceGroupName,
+    [string]$ResourceGroupName = "HackConsole",
 
     [string]$location = $null,
     [string]$webAppName = $null,
