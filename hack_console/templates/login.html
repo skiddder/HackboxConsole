@@ -5,31 +5,32 @@ Login to HackBox Console
 {% block headloadscript %}
 {% endblock %}
 {% block content %}
-		<div id="loginDialog" class="dialog-overlay show" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
-			<div class="dialog-content">
-				<div class="dialog-header">
-					<h2 id="dialogTitle">Welcome Back! 👋</h2>
-					<!-- <button class="dialog-close" id="closeDialog" aria-label="Close dialog">✕</button> -->
-				</div>
-        {% if message %}
-        <div class="loginErrorBox">{{ message }}</div>
-        {% endif %}
-				<form class="login-form" id="loginForm" action="#" method="post">
-					<div class="form-group">
-						<label for="username">Username</label>
-						<input type="text" id="username" name="username" placeholder="Enter your username" required />
-					</div>
-					<div class="form-group">
-						<label for="password">Password</label>
-						<input type="password" id="password" name="password" placeholder="Enter your password" required />
-					</div>
-					<div class="form-actions">
-						<button type="submit" class="primary big">Sign In</button>
-						<!--<button type="button" class="secondary-btn" id="cancelLogin">Cancel</button>-->
-					</div>
-				</form>
-			</div>
-		</div>
+
 {% endblock %}
 {% block bottomloadscript %}
+	<div id="loginDialog" class="dialog-overlay show" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+		<div class="dialog-content">
+			<div class="dialog-header">
+				<h2 id="dialogTitle">Welcome Back! 👋</h2>
+				<!-- <button class="dialog-close" id="closeDialog" aria-label="Close dialog">✕</button> -->
+			</div>
+	{% if message %}
+	<div class="loginErrorBox">{{ message }}</div>
+	{% endif %}
+			<form class="login-form" id="loginForm" action="#" method="post">
+				<div class="form-group">
+					<label for="username">Username</label>
+					<input type="text" id="username" name="username" placeholder="Enter your username" required />
+				</div>
+				<div class="form-group">
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" placeholder="Enter your password" required />
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="primary big">Sign In</button>
+					<!--<button type="button" class="secondary-btn" id="cancelLogin">Cancel</button>-->
+				</div>
+			</form>
+		</div>
+	</div>
 {% endblock %}
