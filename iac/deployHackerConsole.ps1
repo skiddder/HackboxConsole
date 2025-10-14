@@ -15,19 +15,13 @@ param (
     [string]$coachUsername = "",
     [securestring]$coachPassword = $null,
 
+    [switch]$doNotCopyChallengesOrSolutions,
     [switch]$doNotCleanUp
 )
 
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $consoleRoot = Split-Path -Parent $scriptPath
-
-if(-not (Test-Path $SourceChallengesDir -PathType Container)) {
-    throw "SourceChallengesDir must be a directory"
-}
-if(-not (Test-Path $SourceSolutionsDir -PathType Container)) {
-    throw "SourceSolutionsDir must be a directory"
-}
 
 
 # does the file exist?
@@ -46,16 +40,23 @@ else {
     $coachPassword = ConvertTo-SecureString -String "coachPassword" -AsPlainText -Force
 }
 
-
-Write-Host "Copying challenges and solutions to the console"
-# remove the challenges directory
-Remove-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Force
-# remove the solutions directory
-Remove-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Force
-# copy the challenges to the console
-Copy-Item -Path $SourceChallengesDir -Destination (Join-Path $consoleRoot "hack_console" ) -Recurse
-# copy the solutions to the console
-Copy-Item -Path $SourceSolutionsDir -Destination (Join-Path $consoleRoot "hack_console" ) -Recurse
+if(-not $doNotCopyChallengesOrSolutions) {
+    if(-not (Test-Path $SourceChallengesDir -PathType Container)) {
+        throw "SourceChallengesDir must be a directory"
+    }
+    if(-not (Test-Path $SourceSolutionsDir -PathType Container)) {
+        throw "SourceSolutionsDir must be a directory"
+    }
+    Write-Host "Copying challenges and solutions to the console"
+    # remove the challenges directory
+    Remove-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Force
+    # remove the solutions directory
+    Remove-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Force
+    # copy the challenges to the console
+    Copy-Item -Path $SourceChallengesDir -Destination (Join-Path $consoleRoot "hack_console" ) -Recurse
+    # copy the solutions to the console
+    Copy-Item -Path $SourceSolutionsDir -Destination (Join-Path $consoleRoot "hack_console" ) -Recurse
+}
 if(-not (Test-Path (Join-Path $consoleRoot "hack_console" "challenges") -PathType Container)) {
     throw "Challenges directory not found"
 }
