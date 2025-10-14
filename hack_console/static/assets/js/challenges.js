@@ -299,6 +299,11 @@ class ChallengeManager {
     }
 
     navToPreviousChallenge() {
+        if(this.#isSubSite) {
+            this.#isSubSite = false;
+            this.#render();
+            return;
+        }
         if(this.#currentChallenge > 1) {
             this.#currentChallenge--;
             this.#render();
@@ -363,10 +368,6 @@ class ChallengeManager {
             }
             this.#closeDialog(); // in case the dialog is open, close it
             if(event.key === 'ArrowLeft' || event.key === 'p') {
-                if(this.#isSubSite) {
-                    this.navToCurrentChallenge();
-                    return;
-                }
                 this.navToPreviousChallenge();
                 return;
             }
