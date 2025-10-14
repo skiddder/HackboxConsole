@@ -17,7 +17,7 @@ def recursive_list_md_files(directory: str, contains_str: str = "") -> list:
     for root, _, filenames in os.walk(directory):
         for filename in filenames:
             if filename.endswith(".md"):
-                if contains_str == "" or contains_str in filename:
+                if contains_str == "" or contains_str in filename.lower():
                     f = os.path.join(root, filename)
                     if f.startswith(directory):
                         f = f[len(directory):]
@@ -316,20 +316,18 @@ def static_challenges(filename):
         logout_user()
         return redirect(url_for("login"))
     if current_user.role in ["coach", "hacker"]:
-        # additional check for hackers (they can only see the challenges that are available)
-        if current_user.role == "hacker":
-            # file name should be challenge*.md
-            if filename.endswith(".md") and "challenge" in filename.split("/")[-1]:
-                # is it in the list of challenges?
-                if filename in challenges_mds:
-                    # get the position in the array
-                    idx = challenges_mds.index(filename) + 1
-                    # get the current challenge
-                    hbSettings = HackBoxSettings(current_user.tenant)
-                    current_challenge = hbSettings.getStep()
-                    # if the challenge is not available, return an error
-                    if idx > current_challenge:
-                        return "# Challenge not yet available", 404, {"Content-Type": "text/markdown"}
+        # file name should be challenge*.md
+        if filename.endswith(".md") and "challenge" in filename.split("/")[-1].lower():
+            # is it in the list of challenges?
+            if filename in challenges_mds:
+                # get the position in the array
+                idx = challenges_mds.index(filename) + 1
+                # get the current challenge
+                hbSettings = HackBoxSettings(current_user.tenant)
+                current_challenge = hbSettings.getStep()
+                # if the challenge is not available, return an error
+                if idx > current_challenge:
+                    return "# Challenge not yet available", 404, {"Content-Type": "text/markdown"}
         return send_from_directory(challenges_dir, filename)
     return redirect(url_for("login"))
 #endregion -------- STATIC ENDPOINTS --------
