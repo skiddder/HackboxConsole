@@ -1,5 +1,12 @@
 # HackBox Console
 
+> [!NOTE]  
+> Comes with support for:
+> - Microsoft [WhatTheHack](documentation/WhatTheHack/README.md)
+> - Microsoft [MicroHack](documentation/MicroHack/README.md)
+
+
+
 ![HackBox Console Main](./hackbox.jpg)
 
 ![HackBox Console Challenge View](./hackbox2.jpg)
