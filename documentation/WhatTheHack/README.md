@@ -1,5 +1,7 @@
 # WhatTheHack Documentation
 
+Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the Hackathon Console.
+
 1. Choose a hack
    ```pwsh
    .\documentation\WhatTheHack\chooseWhatTheHack.ps1
@@ -7,6 +9,8 @@
 1. Prepare the environment for the chosen hack
    ```pwsh
    .\documentation\WhatTheHack\chooseWhatTheHack.ps1 -HackName "001-IntroToKubernetes"
+   # some hacks offer variants, e.g. "A" or "B" (for example "001-IntroToKubernetes")
+   # .\documentation\WhatTheHack\chooseWhatTheHack.ps1 -HackName "001-IntroToKubernetes" -HackVariant "B"
    ```
 1. Start the Hackathon Console (in this example, we prepare logins for 4 teams with a single coach for each team)
    ```pwsh

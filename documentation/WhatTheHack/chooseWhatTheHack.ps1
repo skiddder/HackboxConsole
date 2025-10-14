@@ -1,5 +1,6 @@
 param(
     [string]$HackName = "",
+    [string]$HackVariant = "",
     [switch]$Download
 )
 
@@ -8,12 +9,11 @@ $script:WhatTheHackRepo = (Join-Path $script:scriptPath "Repo")
 $script:ConsoleRoot =  (Get-Item "$PSScriptRoot/../..").FullName
 
 
-if(($Download) -and (Test-Path "$script:WhatTheHackRepo" -PathType Container)){
+if((-not $Download) -and (Test-Path "$script:WhatTheHackRepo" -PathType Container)){
     Write-Host "WhatTheHack Repo already exists locally. Using cached version. Use -Download to re-download the repo."
 }
 else {
     Write-Host "Downloading WhatTheHack Repo from GitHub"
-    <#
     if(Test-Path "$script:WhatTheHackRepo" -PathType Container) {
         Remove-Item "$script:WhatTheHackRepo" -Recurse -Force | Out-Null
     }
@@ -23,9 +23,19 @@ else {
     }
     Invoke-WebRequest -Uri "https://github.com/microsoft/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
     Expand-Archive "$script:WhatTheHackRepo.zip" -DestinationPath "$script:WhatTheHackRepo"
-    #>
+    Remove-Item "$script:WhatTheHackRepo.zip" -Force | Out-Null
 }
 
+function getSupportedVariantsByName {
+    param (
+        [string]$HackName
+    )
+
+    if($HackName -ieq "001-IntroToKubernetes") {
+        return @("A","B","C","D")
+    }
+    return @()
+}
 
 function getRelativeHackPaths {
     $hacks = @()
@@ -35,8 +45,8 @@ function getRelativeHackPaths {
                 continue
             }
             if(
-                -not (Test-Path "$($hack.FullName)/Coach" -PathType Container) -or 
-                -not (Test-Path "$($hack.FullName)/Student" -PathType Container)
+                (-not (Test-Path "$($hack.FullName)/Coach" -PathType Container)) -or
+                (-not (Test-Path "$($hack.FullName)/Student" -PathType Container))
             ) {
                 continue
             }
@@ -44,16 +54,18 @@ function getRelativeHackPaths {
                 Name = $hack.Name
                 Path = $hack.FullName
                 RelativePath = $hack.FullName.Substring($script:WhatTheHackRepo.Length+1)
+                HackVariants = (getSupportedVariantsByName -HackName $hack.Name)
             }
         }
         if(
-            (Test-Path "$($rd.FullName)/Coach" -PathType Container) -or 
+            (Test-Path "$($rd.FullName)/Coach" -PathType Container) -and
             (Test-Path "$($rd.FullName)/Student" -PathType Container)
         ) {
             $hacks += [PSCustomObject]@{
                 Name = $rd.Name
                 Path = $rd.FullName
                 RelativePath = $rd.FullName.Substring($script:WhatTheHackRepo.Length+1)
+                HackVariants = (getSupportedVariantsByName -HackName $rd.Name)
             }
         }
     }
@@ -101,7 +113,7 @@ function rewriteMdFile {
     $content = (Get-Content -Path $FilePath -Raw).Trim() -split "`n"
 
     # cleaning up the title
-    $content[0] = $content[0] -replace "^#\s+Challenge\s+\d+(\s*[:-])?", "#"
+    $content[0] = $content[0] -replace "^#\s+(Challenge|Solution)\s+\d+(\s*[:-])?", "#"
 
     # navigation bars
     for($i=0; $i -lt 5  -and $i -lt $content.Count; $i++) {
@@ -130,7 +142,6 @@ else {
     else {
         throw "No valid hack found for: $HackName"
     }
-
     # Clean up existing challenges and solutions
     foreach($subdir in @("challenges", "solutions")) {
         if(Test-Path (Join-Path $script:ConsoleRoot "hack_console" $subdir)  -PathType Container) {
@@ -166,7 +177,7 @@ else {
     }
 
     Write-Host "Copying challenges to hack_console"
-    Get-ChildItem -Path $chosenHack.Path | Where-Object { $_.Name -ne "Coach" -and $_.Name.StartsWith(".") -eq $false }  | Copy-Item -Destination (Join-Path $script:ConsoleRoot "hack_console" "challenges") -Recurse -Force | Out-Null
+    Get-ChildItem -Path $chosenHack.Path | Where-Object { $_.Name -ne "Coach" -and $_.Name -ne "Host" -and $_.Name.StartsWith(".") -eq $false }  | Copy-Item -Destination (Join-Path $script:ConsoleRoot "hack_console" "challenges") -Recurse -Force | Out-Null
     Write-Host "Copying solutions to hack_console"
     Get-ChildItem -Path $chosenHack.Path | Where-Object { $_.Name -ne "Student" -and $_.Name.StartsWith(".") -eq $false }  | Copy-Item -Destination (Join-Path $script:ConsoleRoot "hack_console" "solutions") -Recurse -Force | Out-Null
 
@@ -188,6 +199,18 @@ else {
     
         }
     }
+    if(
+        (Get-ChildItem -Path (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach") -Filter *.md | Where-Object { $_.Name.ToLower().Contains("solution") }).Count -eq 0
+    ) {
+        foreach($mdFile in (Get-ChildItem -Path (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach") -Filter *.md)) {
+            if($mdFile.Name.ToLower().Contains("challenge")) {
+                $newName = $mdFile.Name -replace "challenge", "Solution"
+                Write-Host "`tRenaming $($mdFile.Name) to $newName"
+                Rename-Item -Path $mdFile.FullName -NewName $newName
+            }
+        }
+    }
+
 
     Get-ChildItem -Path (Join-Path $script:ConsoleRoot "hack_console" "challenges" "Student") -Recurse | Where-Object { $_.Name -ne "download-Student.zip" -and $_.Name -notlike "*.md" } | Compress-Archive -DestinationPath (Join-Path $script:ConsoleRoot "hack_console" "challenges" "download-Student.zip") -Force | Out-Null
     Get-ChildItem -Path (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach") -Recurse | Where-Object { $_.Name -ne "download-Coach.zip" -and $_.Name -notlike "*.md" } | Compress-Archive -DestinationPath (Join-Path $script:ConsoleRoot "hack_console" "solutions" "download-Coach.zip") -Force | Out-Null
@@ -229,7 +252,74 @@ else {
                 }
             }
         }
+    }
 
+    # special instructions for 001-IntroToKubernetes)
+    if($chosenHack.Name -eq "001-IntroToKubernetes") {
+        if($HackVariant -eq "") {
+            $HackVariant = "A"
+            Write-Warning "No HackVariant specified. Defaulting to Path A. (Available Paths: 'A', 'B', 'C', 'D')"
+        }
+        if($HackVariant -notin @("A","B","C","D")) {
+            Write-Warning "Invalid HackVariant specified: $HackVariant. Defaulting to Path A. (Available Paths: 'A', 'B', 'C', 'D')"
+        }
+        Write-Host "Applying special instructions for Path $HackVariant"
+        # setting the paths
+        $studentPath = (Join-Path $script:ConsoleRoot "hack_console" "challenges" "Student")
+        $coachPath = (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach")
+        # 01
+        Remove-Item (Join-Path $studentPath "Challenge-01.md") -Force | Out-Null
+        Remove-Item (Join-Path $coachPath "Solution-01.md") -Force | Out-Null
+        # 02
+        Remove-Item (Join-Path $studentPath "Challenge-02.md") -Force | Out-Null
+        Remove-Item (Join-Path $coachPath "Solution-02.md") -Force | Out-Null
+        # Apply special instructions based on HackVariant
+        if($HackVariant -eq "A") {
+            # 02b
+            Remove-Item (Join-Path $studentPath "Challenge-02B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02B.md") -Force | Out-Null
+            # 02c
+            Remove-Item (Join-Path $studentPath "Challenge-02C.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02C.md") -Force | Out-Null
+
+        }
+        elseif($HackVariant -eq "B") {
+            # 01a
+            Remove-Item (Join-Path $studentPath "Challenge-01A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-01A.md") -Force | Out-Null
+            # 02a
+            Remove-Item (Join-Path $studentPath "Challenge-02A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02A.md") -Force | Out-Null
+            # 02c
+            Remove-Item (Join-Path $studentPath "Challenge-02C.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02C.md") -Force | Out-Null
+
+        }
+        elseif($HackVariant -eq "C") {
+            # 01a
+            Remove-Item (Join-Path $studentPath "Challenge-01A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-01A.md") -Force | Out-Null
+            # 02a
+            Remove-Item (Join-Path $studentPath "Challenge-02A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02A.md") -Force | Out-Null
+            # 02b
+            Remove-Item (Join-Path $studentPath "Challenge-02B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02B.md") -Force | Out-Null
+        }
+        elseif($HackVariant -eq "D") {
+            # 01a
+            Remove-Item (Join-Path $studentPath "Challenge-01A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-01A.md") -Force | Out-Null
+            # 02a
+            Remove-Item (Join-Path $studentPath "Challenge-02A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02A.md") -Force | Out-Null
+            # 02b
+            Remove-Item (Join-Path $studentPath "Challenge-02B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02B.md") -Force | Out-Null
+            # 02c
+            Remove-Item (Join-Path $studentPath "Challenge-02C.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-02C.md") -Force | Out-Null
+        }
     }
 }
 
