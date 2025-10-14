@@ -63,21 +63,22 @@ if(-not (Test-Path (Join-Path $consoleRoot "hack_console" "solutions") -PathType
     throw "Solutions directory not found"
 }
 # no md files pattern challenge-*.md in the challenges directory (recursively)
-$challengeMdFileCount = (Get-ChildItem -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Filter "challenge-*.md").Count
+$challengeMdFileCount = (Get-ChildItem -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Filter "*challenge*.md").Count
 Write-Host "  - Found $challengeMdFileCount challenges md files"
 if($challengeMdFileCount -eq 0) {
     throw "No challenges md files found in the challenges directory"
 }
-$solutionMdFileCound = (Get-ChildItem -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Filter "solution-*.md").Count
-Write-Host "  - Found $solutionMdFileCound solutions md files"
-if($solutionMdFileCound  -eq 0) {
+$solutionMdFileCount = (Get-ChildItem -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Filter "*solution*.md").Count
+Write-Host "  - Found $solutionMdFileCount solutions md files"
+if($solutionMdFileCount  -eq 0) {
     throw "No solutions md files found in the solutions directory"
 }
-if($challengeMdFileCount -ne $solutionMdFileCound) {
+if($challengeMdFileCount -ne $solutionMdFileCount) {
     Write-Warning "The number of challenges md files does not match the number of solutions md files"
 }
 
-
+Write-Host "Removing all __pycache__ directories"
+Get-ChildItem -Path (Join-Path $consoleRoot "hack_console") -Recurse -Directory -Filter "__pycache__" | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
 
 # run the bicep deployment
 Write-Host ( "Deploying the hacker console to Resource Group $ResourceGroupName (Subscription: " + ((Get-AzContext).Subscription.Id) + ")" )
