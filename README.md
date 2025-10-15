@@ -2,8 +2,8 @@
 
 > [!NOTE]  
 > Comes with support for:
-> - Microsoft [WhatTheHack](documentation/WhatTheHack/README.md)
-> - Microsoft [MicroHack](documentation/MicroHack/README.md)
+> - Microsoft [WhatTheHack - Integration Guide](documentation/WhatTheHack/README.md)
+> - Microsoft [MicroHack - Integration Guide](documentation/MicroHack/README.md)
 
 
 
