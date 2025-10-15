@@ -27,7 +27,11 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
 1. (optional) In case you want to run it within pre-built environments:
 
    1. Follow the instructions in the chosen hack's prerequisites markdown file to create the environments for each team
-   1. Publish credentials to foreach team
+   1. Put the credentials for each environments into a csv or json file
+      - csv with required columns: name, value, tenant   (optional columns: group)
+      - json array of objects with required attributes: name, value, tenant   (optional attributes: group)
+      - tenant must match the tenant name in users.json (follows the pattern "team1", "team2", ...)
+   1. Publish credentials
       ```pwsh
       # for csv with required columns: name, value   (optional columns: group, tenant)
       Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 -storageAccountName remsa001 -storageAccountName "storage...."
