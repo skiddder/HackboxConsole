@@ -5,6 +5,16 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
 > [!NOTE]
 > Most of the WhatTheHack hacks are supported. There are some, that do not have markdown files (just word or powerpoint files) and those are not supported.
 
+## Prerequisites
+ - Powershell 7+
+ - Azure Az Module
+ - Git
+ - Azure Subscription
+ - This repository cloned (``git clone https://github.com/qxsch/HackboxConsole.git``)
+
+
+## Execution Steps
+
 1. Choose a hack
    ```pwsh
    .\documentation\WhatTheHack\chooseWhatTheHack.ps1 | Format-Table Name, RelativePath, HackVariants
