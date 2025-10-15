@@ -26,7 +26,7 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
 1. Check the users.json file for the logins of the teams and coaches
 1. (optional) In case you want to run it within pre-built environments:
 
-   1. Follow the instructions in the chosen hack's preparation readme file to create the environments for each team
+   1. Follow the instructions in the chosen hack's prerequisites markdown file to create the environments for each team
    1. Publish credentials to foreach team
       ```pwsh
       # for csv with required columns: name, value   (optional columns: group, tenant)
