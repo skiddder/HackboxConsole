@@ -34,6 +34,19 @@ function getSupportedVariantsByName {
     if($HackName -ieq "001-IntroToKubernetes") {
         return @("A","B","C","D")
     }
+
+    if($HackName -ieq "015-Serverless") {
+        return @("Standard", "Accelerator", "All")
+    }
+
+    if($HackName -ieq "039-AKSEnterpriseGrade") {
+        return @("Standard","Accelerator")
+    }
+
+    if($HackName -ieq "047-TrafficControlWithDapr") {
+        return @("A","B")
+    }
+
     return @()
 }
 
@@ -117,7 +130,7 @@ function rewriteMdFile {
     $content = (Get-Content -Path $FilePath -Raw).Trim() -split "`n"
 
     # cleaning up the title
-    $content[0] = $content[0] -replace "^#\s+(Challenge|Solution)\s+\d+(\s*[:-])?", "#"
+    $content[0] = $content[0] -replace "^#(\s+Optional)?\s+(Challenge|Solution)\s+\d+(\s*[:-])?", "# "
 
     # navigation bars
     for($i=0; $i -lt 5  -and $i -lt $content.Count; $i++) {
@@ -258,6 +271,9 @@ else {
         }
     }
 
+    # setting the paths
+    $studentPath = (Join-Path $script:ConsoleRoot "hack_console" "challenges" "Student")
+    $coachPath = (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach")
     # special instructions for 001-IntroToKubernetes)
     if($chosenHack.Name -eq "001-IntroToKubernetes") {
         if($HackVariant -eq "") {
@@ -268,9 +284,6 @@ else {
             Write-Warning "Invalid HackVariant specified: $HackVariant. Defaulting to Path A. (Available Paths: 'A', 'B', 'C', 'D')"
         }
         Write-Host "Applying special instructions for Path $HackVariant"
-        # setting the paths
-        $studentPath = (Join-Path $script:ConsoleRoot "hack_console" "challenges" "Student")
-        $coachPath = (Join-Path $script:ConsoleRoot "hack_console" "solutions" "Coach")
         # 01
         Remove-Item (Join-Path $studentPath "Challenge-01.md") -Force | Out-Null
         Remove-Item (Join-Path $coachPath "Solution-01.md") -Force | Out-Null
@@ -323,6 +336,83 @@ else {
             # 02c
             Remove-Item (Join-Path $studentPath "Challenge-02C.md") -Force | Out-Null
             Remove-Item (Join-Path $coachPath "Solution-02C.md") -Force | Out-Null
+        }
+    }
+    elseif($chosenHack.Name -eq "015-Serverless") {
+        if($HackVariant -eq "") {
+            $HackVariant = "Standard"
+            Write-Warning "No HackVariant specified. Defaulting to Standard. (Available Variants: 'Standard', 'Accelerator', 'All')"
+        }
+        if($HackVariant -notin @("Standard","Accelerator","All")) {
+            Write-Warning "Invalid HackVariant specified: $HackVariant. Defaulting to Standard. (Available Variants: 'Standard', 'Accelerator', 'All')"
+        }
+        Write-Host "Applying special instructions for Path $HackVariant"
+        if($HackVariant -eq "Standard") {
+            # 03a
+            Remove-Item (Join-Path $studentPath "Challenge-03A.md") -Force | Out-Null
+            # 07a
+            Remove-Item (Join-Path $studentPath "Challenge-07A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-07A.md") -Force | Out-Null
+            # 07b
+            Remove-Item (Join-Path $studentPath "Challenge-07B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-07B.md") -Force | Out-Null
+        }
+        elseif($HackVariant -eq "Accelerator") {
+            # 03a
+            Remove-Item (Join-Path $studentPath "Challenge-03.md") -Force | Out-Null
+            Rename-Item (Join-Path $studentPath "Challenge-03A.md") -NewName "Challenge-03.md" | Out-Null
+            # 07a
+            Remove-Item (Join-Path $studentPath "Challenge-07A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-07A.md") -Force | Out-Null
+            # 07b
+            Remove-Item (Join-Path $studentPath "Challenge-07B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-07B.md") -Force | Out-Null
+        }
+        elseif($HackVariant -eq "All") {
+            # 03a
+            Remove-Item (Join-Path $studentPath "Challenge-03A.md") -Force | Out-Null
+        }
+    }
+    elseif($chosenHack.Name -eq "039-AKSEnterpriseGrade") {
+        if($HackVariant -eq "") {
+            $HackVariant = "Standard"
+            Write-Warning "No HackVariant specified. Defaulting to Standard. (Available Variants: 'Standard', 'Accelerator')"
+        }
+        if($HackVariant -notin @("Standard","Accelerator")) {
+            Write-Warning "Invalid HackVariant specified: $HackVariant. Defaulting to Standard. (Available Variants: 'Standard', 'Accelerator')"
+        }
+        Write-Host "Applying special instructions for Variant $HackVariant"
+        if($HackVariant -eq "Standard") {
+            # 02a
+            Remove-Item (Join-Path $studentPath "Challenge-02A.md") -Force | Out-Null
+        }
+        elseif($HackVariant -eq "Accelerator") {
+            # 02
+            Remove-Item (Join-Path $studentPath "Challenge-02.md") -Force | Out-Null
+        }
+    }
+    elseif($chosenHack.Name -eq "047-TrafficControlWithDapr") {
+        if($HackVariant -eq "") {
+            $HackVariant = "A"
+            Write-Warning "No HackVariant specified. Defaulting to Path A. (Available Paths: 'A', 'B', 'C', 'D')"
+        }
+        if($HackVariant -notin @("A","B","C","D")) {
+            Write-Warning "Invalid HackVariant specified: $HackVariant. Defaulting to Path A. (Available Paths: 'A', 'B', 'C', 'D')"
+        }
+        Write-Host "Applying special instructions for Path $HackVariant"
+        # 08
+        Remove-Item (Join-Path $studentPath "Challenge-08.md") -Force | Out-Null
+        Remove-Item (Join-Path $coachPath "Solution-08.md") -Force | Out-Null
+        # Apply special instructions based on HackVariant
+        if($HackVariant -eq "A") {
+            # 08b
+            Remove-Item (Join-Path $studentPath "Challenge-08B.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-08B.md") -Force | Out-Null
+        }
+        elseif($HackVariant -eq "B") {
+            # 08a
+            Remove-Item (Join-Path $studentPath "Challenge-08A.md") -Force | Out-Null
+            Remove-Item (Join-Path $coachPath "Solution-08A.md") -Force | Out-Null
         }
     }
 }
