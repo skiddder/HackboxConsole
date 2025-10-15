@@ -74,7 +74,7 @@ Publish additional credentials to the storage account in this example the name o
 In addtion, you can also add multiple credentials from a json or csv file:
 ```pwsh
 # for csv with required columns: name, value   (optional columns: group, tenant)
-Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 -storageAccountName remsa001 -storageAccountName "storage...."
+Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 storageAccountName "storage...."
 # for json array of objects with required attributes: name, value   (optional attributes: group, tenant)
-Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -storageAccountName remsa001 -storageAccountName "storage...." 
+Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -storageAccountName "storage...." 
 ```

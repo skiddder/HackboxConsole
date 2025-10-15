@@ -31,6 +31,7 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
    ```
 1. Deploy to Azure
    ```pwsh
+   # we use -doNotCopyChallengesOrSolutions, because the above steps already copied everything to the right place
    .\iac\deployHackerConsole.ps1 -doNotCopyChallengesOrSolutions
    ```
 1. Check the users.json file for the logins of the teams and coaches
