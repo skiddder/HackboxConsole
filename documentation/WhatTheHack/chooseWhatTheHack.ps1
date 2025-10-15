@@ -54,7 +54,7 @@ function getRelativeHackPaths {
     $hacks = @()
     foreach($rd in (Get-ChildItem -Path "$script:WhatTheHackRepo" -Directory)) {
         foreach($hack in (Get-ChildItem -Path "$($rd.FullName)" -Directory)) {
-            if($hack.Name -notmatch "^[0-9]+-" -and $hack.Name.StartsWith("000-")) {
+            if($hack.Name -notmatch "^[0-9]+-" -or $hack.Name.StartsWith("000-")) {
                 continue
             }
             if(
