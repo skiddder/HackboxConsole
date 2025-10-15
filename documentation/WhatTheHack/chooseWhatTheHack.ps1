@@ -46,7 +46,9 @@ function getRelativeHackPaths {
             }
             if(
                 (-not (Test-Path "$($hack.FullName)/Coach" -PathType Container)) -or
-                (-not (Test-Path "$($hack.FullName)/Student" -PathType Container))
+                (-not (Test-Path "$($hack.FullName)/Student" -PathType Container)) -or
+                ((Get-ChildItem "$($hack.FullName)/Coach" -Filter *.md).Count -eq 0) -or
+                ((Get-ChildItem "$($hack.FullName)/Student" -Filter *.md).Count -eq 0)
             ) {
                 continue
             }
@@ -59,7 +61,9 @@ function getRelativeHackPaths {
         }
         if(
             (Test-Path "$($rd.FullName)/Coach" -PathType Container) -and
-            (Test-Path "$($rd.FullName)/Student" -PathType Container)
+            (Test-Path "$($rd.FullName)/Student" -PathType Container) -and
+            (Get-ChildItem "$($rd.FullName)/Coach" -Filter *.md).Count -gt 0 -and
+            (Get-ChildItem "$($rd.FullName)/Student" -Filter *.md).Count -gt 0
         ) {
             $hacks += [PSCustomObject]@{
                 Name = $rd.Name

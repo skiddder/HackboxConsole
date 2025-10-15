@@ -7,7 +7,7 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
 
 1. Choose a hack
    ```pwsh
-   .\documentation\WhatTheHack\chooseWhatTheHack.ps1
+   .\documentation\WhatTheHack\chooseWhatTheHack.ps1 | Format-List
    ```
 1. Prepare the environment for the chosen hack
    ```pwsh
