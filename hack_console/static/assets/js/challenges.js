@@ -41,6 +41,7 @@ class ChallengeManager {
         var currentUrl = new URL(window.location.href);
         console.log("Current URL", currentUrl);
         document.getElementById("zeromd").addEventListener('zero-md-rendered', function() {
+            var mdBase = document.getElementById("zeromd").src.substring(0, document.getElementById("zeromd").src.lastIndexOf("/") + 1);
             console.log("configuring markdown links");
             var nodes = document.getElementById("zeromd").shadowRoot.querySelectorAll('a[href]');
             nodes.forEach(function(node) {
@@ -58,18 +59,19 @@ class ChallengeManager {
                     });
                 }
             });
+            console.log("configuring markdown images");
             document.getElementById("zeromd").shadowRoot.querySelectorAll('img').forEach(function(img) {
                 if(img.src) {
-                    let src = img.src.toLowerCase();
                     // is it at the same host
-                    if(src.startsWith(currentUrl.origin)) {
+                    if(img.src.startsWith(currentUrl.origin)) {
                         let rp = img.src.substring(currentUrl.origin.length);
                         if(!rp.startsWith("/md/challenges/") && !rp.startsWith("/md/solutions/")) {
-                            img.src = "/md/challenges" + rp;
+                            img.src = mdBase + rp;
                         }
                     }
                 }
             });
+
         });
     }
 
