@@ -46,6 +46,18 @@ class SolutionManager {
                     });
                 }
             });
+            document.getElementById("zeromd").shadowRoot.querySelectorAll('img').forEach(function(img) {
+                if(img.src) {
+                    let src = img.src.toLowerCase();
+                    // is it at the same host
+                    if(src.startsWith(currentUrl.origin)) {
+                        let rp = img.src.substring(currentUrl.origin.length);
+                        if(!rp.startsWith("/md/challenges/") && !rp.startsWith("/md/solutions/")) {
+                            img.src = "/md/solutions" + rp;
+                        }
+                    }
+                }
+            });
         });
     }
 
