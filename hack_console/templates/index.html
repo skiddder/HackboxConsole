@@ -10,7 +10,7 @@ HackBox Console - Challenges
 <h1 class="page-title">Welcome 👋</h1>
 <p class="lead">Dive into challenges and track your progress.</p>
 <div class="card-grid">
-	<div class="card washed pop">
+	<div class="card washed pop spin-hov-alt">
 		<h2>Get Started{% if user and user.is_authenticated %} {{ user.username }}{% endif %}</h2>
 		<p>Open the Challenges section to begin your journey.</p>
 		{% if user and user.is_authenticated and user.role in ['hacker', 'coach'] %}

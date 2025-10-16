@@ -5,7 +5,7 @@ from . import app, all_users, HackBoxUser
 from flask_login import login_user, login_required, logout_user, current_user
 from azure.data.tables import TableServiceClient
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
-from typing import Union, Dict
+from typing import Union, Dict, Tuple
 import natsort
 
 # get the directory of this file
@@ -112,7 +112,51 @@ class HackBoxSettings:
         if "Step" not in step:
             return 1
         return step["Step"]
-    
+
+    def setStopwatch(self, status : str, startTime : Union[datetime, str, None], secondsElapsed: int) -> None:
+        if status not in ["running", "stopped"]:
+            raise ValueError("status must be 'running' or 'stopped'")
+        if startTime is None:
+            startTime = ""
+        elif isinstance(startTime, datetime):
+            startTime = startTime.isoformat()
+        elif isinstance(startTime, str):
+            try:
+                startTime = datetime.fromisoformat(startTime).isoformat()
+            except Exception:
+                raise ValueError("startTime must be a datetime object or an ISO 8601 string")
+        else:
+            raise ValueError("startTime must be a datetime object or an ISO 8601 string")
+        if secondsElapsed < 0:
+            secondsElapsed = 0
+        else:
+            secondsElapsed = int(secondsElapsed)
+        self.set("Stopwatch", {"status": status, "startTime": startTime, "secondsElapsed": secondsElapsed})
+        return self
+
+    def getStopwatch(self) -> Tuple[str, Union[datetime, None], int]:
+        ti = self.get("Stopwatch")
+        status = "stopped"
+        startTime = None
+        secondsElapsed = 0
+        if ti is None:
+            return status, startTime, secondsElapsed
+        if "status" in ti:
+            status = ti["status"]
+        if "startTime" in ti:
+            startTime = ti["startTime"]
+        if "secondsElapsed" in ti:
+            secondsElapsed = ti["secondsElapsed"]
+        if startTime is not None:
+            if startTime == "":
+                startTime = None
+            else:
+                try:
+                    startTime = datetime.fromisoformat(startTime)
+                except Exception:
+                    startTime = None
+        return status, startTime, secondsElapsed
+
     def set(self, key: str, value: Dict[str, Union[str, int, bool]], group : str = "Default") -> None:
         key = self.sanitizeKey(key)
         group = self.sanitizeGroup(group)
@@ -184,6 +228,17 @@ def credentials():
         return redirect(url_for("home"))
     return render_template("credentials.html", user=current_user)
 
+@app.route("/webtimer")
+def webtimer():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    if current_user.role not in ["coach", "hacker"]:
+        return redirect(url_for("home"))
+    return render_template("webtimer.html", user=current_user)
+
 
 @app.route("/logout")
 def logout():
@@ -221,11 +276,9 @@ def api_get_challenge():
         return redirect(url_for("login"))
     try:
         hbSettings = HackBoxSettings(current_user.tenant)
-        hbSettings.getStep()
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @login_required
 @app.route("/api/set/challenge", methods=["POST"])
@@ -296,6 +349,43 @@ def api_config(group : str = 'Default'):
         return redirect(url_for("login"))
     hbSettings = HackBoxSettings(current_user.tenant)
     return jsonify(hbSettings.getGroup(group))
+
+@login_required
+@app.route("/api/get/stopwatch")
+def api_get_stopwatch():
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    try:
+        hbSettings = HackBoxSettings(current_user.tenant)
+        status, startTime, secondsElapsed = hbSettings.getStopwatch()
+        return jsonify({"success": True, "status" : status, "startTime": startTime, "secondsElapsed": secondsElapsed })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@login_required
+@app.route("/api/set/stopwatch", methods=["POST"])
+def api_set_stopwatch():
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    if current_user.role != "coach":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        data = request.get_json()
+        if "status" not in data:
+            return jsonify({"success": False, "error": "Missing status"}), 400
+        if "startTime" not in data:
+            return jsonify({"success": False, "error": "Missing startTime"}), 400
+        if "secondsElapsed" not in data:
+            return jsonify({"success": False, "error": "Missing secondsElapsed"}), 400
+        hbSettings = HackBoxSettings(current_user.tenant)
+        hbSettings.setStopwatch(data["status"], data["startTime"], data["secondsElapsed"])
+        status, startTime, secondsElapsed = hbSettings.getStopwatch()
+        return jsonify({"success": True, "status" : status, "startTime": startTime, "secondsElapsed": secondsElapsed})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 #endregion -------- API ENDPOINTS --------
 
 #region -------- STATIC ENDPOINTS --------

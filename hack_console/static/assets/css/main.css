@@ -140,7 +140,6 @@ body {
 .card.washed:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.9),transparent 55%),radial-gradient(circle at 12% 90%,rgba(255,255,255,.7),transparent 70%); opacity:.6; pointer-events:none; }
 .card h2 { margin:.2rem 0 .6rem; font-family:var(--font-display); font-size:1.3rem; }
 .card p { margin:0 0 .75rem; font-size:.95rem; }
-.card:hover { transform:translateY(-6px) rotate(-.6deg); }
 .card:focus-visible { outline:none; box-shadow:var(--shadow-focus); }
 .big-card { font-size:1.05rem; }
 
@@ -266,6 +265,8 @@ body {
 .float { animation: float 5s ease-in-out infinite; }
 .spin-hov { transition:transform 600ms cubic-bezier(.68,-0.55,.27,1.55); }
 .spin-hov:hover { transform:rotate(3deg) scale(1.03); }
+.spin-hov-alt { transition:transform 600ms cubic-bezier(.68,-0.55,.27,1.55); }
+.spin-hov-alt:hover { transform:rotate(-3deg) scale(1.03); }
 
 @keyframes fadeIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:translateY(0);} }
 @keyframes popIn { 0% { opacity:0; transform:scale(.7) rotate(-4deg);} 60% { opacity:1; transform:scale(1.05);} 100% { transform:scale(1);} }
@@ -478,4 +479,22 @@ zero-md::before {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+}
+
+
+.watch-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(3.2rem, 7vw, 6rem);
+  letter-spacing: 0.16em;
+  text-align: center;
+  margin: 1.8rem 0;
+  background: linear-gradient(120deg, #6f63ff, #8a82ff 30%, #ff6f5e 70%, #ffa764);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow:
+    0 18px 35px rgba(111, 99, 255, 0.35),
+    0 4px 12px rgba(255, 111, 94, 0.25);
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.12));
 }

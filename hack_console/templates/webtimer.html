@@ -1,0 +1,35 @@
+{% set toolbarname = 'challenge' %}
+{% extends "layout.html" %}
+{% block title %}
+HackBox Console - Challenges
+{% endblock %}
+{% block headloadscript %}
+{% endblock %}
+{% block toolbar %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn current">Status: <span id="timer-status">?</span></a>
+			</div>
+            {% if user and user.is_authenticated and user.role == 'coach' %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn success" id="timer-start">Start</a>
+				<a href="#" class="pill-btn success" id="timer-stop">Stop</a>
+				<a href="#" class="pill-btn warn" id="timer-reset">Reset</a>
+			</div>
+            {% endif %}
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Timer</h1>
+
+
+
+<div class="card">
+	<div class="watch-display" id="timer-time" aria-live="polite">00:00:00</div>
+</div>
+
+
+
+{% endblock %}
+
+{% block bottomloadscript %}
+<script src="{{ url_for('static', filename='assets/js/webtimer.js') }}"></script>
+{% endblock %}
