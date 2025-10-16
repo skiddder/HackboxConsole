@@ -2,6 +2,10 @@
 
 Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](https://www.microsoft.com/de-de/techwiese/events/microhacks/default.aspx)) hackathon with the Hackathon Console.
 
+> [!NOTE]
+> **7+ hacks are supported.** There are some hacks (~4), that are linked ones or incomplete.
+
+
 ## Prerequisites
  - Powershell 7+
  - Azure Az Module
@@ -17,7 +21,7 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
    ```
 1. Prepare the environment for the chosen hack
    ```pwsh
-   .\documentation\MicroHack\chooseMicroHack.ps1 -HackName "001-04_BCDR_Azure_Native"
+   .\documentation\MicroHack\chooseMicroHack.ps1 -HackName "04_BCDR_Azure_Native"
    ```
 1. Create the Hackathon Console Users (in this example, we prepare logins for 4 teams with a single coach for each team)
    ```pwsh
