@@ -276,6 +276,14 @@ def api_get_challenge():
         return redirect(url_for("login"))
     try:
         hbSettings = HackBoxSettings(current_user.tenant)
+        try:
+            # stop watch not (yet) running, start it now for hackers
+            if current_user.role == "hacker":
+                status, startTime, secondsElapsed = hbSettings.getStopwatch()
+                if status != "running":
+                    hbSettings.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc), 0)
+        except:
+            pass
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -289,6 +297,7 @@ def api_set_challenge():
     if current_user.role != "coach":
         return jsonify({"success": False, "error": "Unauthorized"}), 403
     try:
+        reset_triggered = False
         data = request.get_json()
         if "challenge" not in data:
             return jsonify({"success": False, "error": "Missing challenge"}), 400
@@ -300,6 +309,7 @@ def api_set_challenge():
             data["challenge"] = hbSettings.getStep() + 1
         elif str(data["challenge"]).lower().strip() == "first":
             data["challenge"] = 1
+            reset_triggered = True
         elif str(data["challenge"]).lower().strip() == "last":
             data["challenge"] = len(challenges_mds) + 1
         data["challenge"] = int(data["challenge"])
@@ -308,7 +318,9 @@ def api_set_challenge():
         hbSettings.setStep(data["challenge"])
         # log challenge time for previous step
         try:
-            if previous_step <= len(challenges_mds):
+            if reset_triggered:
+                hbSettings.set("ChallengeCompletionSeconds", {}, group="Statistics")
+            elif previous_step <= len(challenges_mds):
                 # log the challenge time
                 status, startTime, secondsElapsed = hbSettings.getStopwatch()
                 if status == "running" and startTime is not None:
