@@ -3,7 +3,7 @@
 Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](https://www.microsoft.com/de-de/techwiese/events/microhacks/default.aspx)) hackathon with the Hackathon Console.
 
 > [!NOTE]
-> **7+ hacks are supported.** There are some hacks (~4), that are linked ones or incomplete.
+> **7+ hacks are supported.** There are some unsupported hacks (~4), that are linked ones or incomplete.
 
 
 ## Prerequisites
