@@ -32,6 +32,10 @@ class ChallengeManager {
     gotoSubSiteMd(path) {
         if(path.startsWith("/md/challenges/") || path.startsWith("/md/solutions/") && path.endsWith(".md")) {
             this.#isSubSite = true;
+            if(document.getElementById("challengeSubtitle")) {
+                document.getElementById("challengeSubtitle").style.display = "block";
+                document.getElementById("challengeSubtitle").innerText = "Subsite: " + path.substring(path.lastIndexOf("/") + 1);
+            }
             document.getElementById("zeromd").src = path;
         }
     }
@@ -226,6 +230,10 @@ class ChallengeManager {
         if(this.#challenges.length === 0) {
             console.log("No challenges available");
             return;
+        }
+
+        if(document.getElementById("challengeSubtitle")) {
+            document.getElementById("challengeSubtitle").style.display = "none";
         }
 
         if(this.#currentStep > this.#challenges.length) {
