@@ -440,6 +440,8 @@ def api_get_statistics_challenge_completion_times():
         challengeTimes = hbSettings.get("ChallengeCompletionSeconds", group="Statistics")
         if challengeTimes is None:
             challengeTimes = {}
+        del challengeTimes["key"]
+        del challengeTimes["group"]
         return jsonify({"success": True, "challengeTimes": challengeTimes})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
