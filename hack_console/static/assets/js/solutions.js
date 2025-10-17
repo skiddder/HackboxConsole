@@ -132,8 +132,45 @@ class SolutionManager {
         }
     }
 
-    #showDialog(message) {
-        alert(message);
+    #closeDialog() {
+        try {
+            if(document.getElementById("solutionDialog")) {
+                document.getElementById("solutionDialog").classList.remove("show");
+            }
+        }
+        catch {}
+    }
+    #acceptDialog() {
+        this.navToCurrentSolution();
+        this.#closeDialog();
+    }
+
+    #showDialog(message, title="Solution Update") {
+        if(document.getElementById("solutionDialog")) {
+            try {
+                let dialog = document.getElementById("solutionDialog");
+                if(dialog.querySelector("button.dialog-close")) {
+                    dialog.querySelector("button.dialog-close").onclick = this.#closeDialog.bind(this);
+                }
+                if(dialog.querySelector("button.cancel-dialog")) {
+                    dialog.querySelector("button.cancel-dialog").onclick = this.#closeDialog.bind(this);
+                }
+                if(dialog.querySelector("button.accept-dialog")) {
+                    dialog.querySelector("button.accept-dialog").onclick = this.#acceptDialog.bind(this);
+                }
+                dialog.classList.remove("show");
+                dialog.querySelector(".dialog-title").innerText = title;
+                dialog.querySelector(".dialog-body").innerText = message;
+                dialog.classList.add("show");
+            }
+            catch {
+                this.#closeDialog();
+                alert(message);
+            }
+        }
+        else {
+            alert(message);
+        }
     }
 
     #informUserOfNewStep() {

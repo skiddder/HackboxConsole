@@ -150,8 +150,7 @@ class ChallengeManager {
     #closeDialog() {
         try {
             if(document.getElementById("challengeDialog")) {
-                let dialog = document.getElementById("challengeDialog");
-                dialog.classList.remove("show");
+                document.getElementById("challengeDialog").classList.remove("show");
             }
         }
         catch {}

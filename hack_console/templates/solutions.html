@@ -33,6 +33,21 @@ HackBox Console - Solutions
 {% endblock %}
 
 {% block bottomloadscript %}
+<div id="solutionDialog" class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+	<div class="dialog-content">
+		<div class="dialog-header">
+			<h2 class="dialog-title">Welcome Back! 👋</h2>
+			<button class="dialog-close" aria-label="Close dialog">✕</button>
+		</div>
+		<div class="form-group dialog-body">
+		</div>
+		<br />
+		<div class="form-actions">
+			<button class="primary big accept-dialog">Go to solution</button>
+			<button type="button" class="secondary-btn cancel-dialog">Done</button>
+		</div>
+	</div>
+</div>
 <script type="text/javascript">
     window.defaultSolutionUrl='{{ url_for("static_solutions", filename="") }}';
 </script>
