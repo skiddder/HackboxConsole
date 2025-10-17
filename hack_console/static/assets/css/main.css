@@ -132,6 +132,7 @@ body {
   position:relative;
   background:var(--color-surface);
   border-radius:var(--radius-lg);
+  margin-bottom:1.4rem;
   padding:1.25rem 1.3rem 1.4rem;
   box-shadow:var(--shadow-soft);
   overflow:hidden;
@@ -188,7 +189,7 @@ body {
   margin:0 0 1rem;
   color:var(--color-text);
 }
-.credentials table {
+table.generic, .credentials table {
   width:100%;
   max-width:600px;
   border-collapse:separate;
@@ -199,7 +200,7 @@ body {
   box-shadow:var(--shadow-soft);
   margin-bottom: 2rem;
 }
-.credentials th {
+table.generic th, .credentials th {
   font-family:var(--font-display);
   font-weight:600;
   font-size:.9rem;
@@ -210,26 +211,26 @@ body {
   text-transform:uppercase;
   letter-spacing:.5px;
 }
-.credentials td {
+table.generic td, .credentials td {
   padding:1rem 1.2rem;
   border-top:1px solid #e3dfee;
   font-size:1rem;
 }
-.credentials tr:hover td {
+table.generic tr:hover td, .credentials tr:hover td {
   background:rgba(111,99,255,.05);
 }
-.credentials td.name {
+table.generic td.name, .credentials td.name {
   font-weight:500;
   color:var(--color-text);
 }
-.credentials td.credential {
+table.generic td.credential, .credentials td.credential {
   cursor:pointer;
   font-family:'Courier New', monospace;
   font-weight:600;
   color:var(--color-secondary);
   position:relative;
 }
-.credentials td.credential.hidden {
+table.generic td.credential.hidden, .credentials td.credential.hidden {
   cursor:pointer;
   color:var(--color-secondary);
   text-shadow:0 0 12px rgba(111,99,255,.8);
@@ -237,12 +238,12 @@ body {
   transition:filter var(--transition-med), text-shadow var(--transition-med);
   user-select:none;
 }
-.credentials td.credential.hidden:hover {
+table.generic td.credential.hidden:hover, .credentials td.credential.hidden:hover {
   filter:blur(4px);
   text-shadow:0 0 10px rgba(111,99,255,1);
 }
 
-.credentials td.credential:not(.hidden) {
+table.generic td.credential:not(.hidden), .credentials td.credential:not(.hidden) {
   animation:revealCredential .4s ease;
 }
 

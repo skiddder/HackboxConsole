@@ -293,6 +293,7 @@ def api_set_challenge():
         if "challenge" not in data:
             return jsonify({"success": False, "error": "Missing challenge"}), 400
         hbSettings = HackBoxSettings(current_user.tenant)
+        previous_step = hbSettings.getStep()
         if str(data["challenge"]).lower().strip() == "decrease":
             data["challenge"] = hbSettings.getStep() - 1
         elif str(data["challenge"]).lower().strip() == "increase":
@@ -305,6 +306,23 @@ def api_set_challenge():
         if data["challenge"] < 1 or data["challenge"] > len(challenges_mds) + 1:
             return jsonify({"success": False, "error": "Challenge not found"}), 404
         hbSettings.setStep(data["challenge"])
+        # log challenge time for previous step
+        try:
+            if previous_step <= len(challenges_mds):
+                # log the challenge time
+                status, startTime, secondsElapsed = hbSettings.getStopwatch()
+                if status == "running" and startTime is not None:
+                    # calculate elapsed time
+                    secondsElapsed = (datetime.datetime.now(datetime.timezone.utc) - startTime).total_seconds()
+                    challengeTimes = hbSettings.get("ChallengeCompletionSeconds", group="Statistics")
+                    if challengeTimes is None:
+                        challengeTimes = {}
+                    challengeTimes[f"Challenge{previous_step:03d}"] = float(secondsElapsed)
+                    hbSettings.set("ChallengeCompletionSeconds", challengeTimes, group="Statistics")
+                    print(f"Logged challenge time for challenge {previous_step:d}: {secondsElapsed} seconds")
+        except Exception as e:
+            print("Could not log challenge time", e)
+        # reset stopwatch
         try:
             if data["challenge"] > len(challenges_mds):
                 hbSettings.setStopwatch("stopped", None, 0)
@@ -397,6 +415,22 @@ def api_set_stopwatch():
         return jsonify({"success": True, "status" : status, "startTime": startTime, "secondsElapsed": secondsElapsed})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@login_required
+@app.route("/api/get/statistics/challenge-completion-times")
+def api_get_statistics_challenge_completion_times():
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    try:
+        hbSettings = HackBoxSettings(current_user.tenant)
+        challengeTimes = hbSettings.get("ChallengeCompletionSeconds", group="Statistics")
+        if challengeTimes is None:
+            challengeTimes = {}
+        return jsonify({"success": True, "challengeTimes": challengeTimes})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 #endregion -------- API ENDPOINTS --------
 

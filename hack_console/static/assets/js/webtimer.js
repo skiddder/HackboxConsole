@@ -4,6 +4,7 @@ class StopWatch {
         status: "stopped",
         secondsElapsed: 0
     };
+    #challengeCompletionTimes = [];
     #renderInterval = null;
     #refreshSeconds = 0;
     #refreshTimeout = null;
@@ -74,10 +75,43 @@ class StopWatch {
         console.log("Refreshing");
         try{
             this.#timerInfo = await this.getTimerInfo();
+            this.#challengeCompletionTimes = await this.getChallengeCompletionTimes();
             this.#render();
+            this.#renderCompletionTimes();
         }
         finally {
             this.#setRefreshTimer();
+        }
+    }
+
+    #renderCompletionTimes() {
+        if(document.getElementById("challenge-completion-times-table")) {
+            let tblEl = document.getElementById("challenge-completion-times-table");
+            tblEl.innerHTML = "";
+            var trHeader = document.createElement('tr');
+            var th1 = document.createElement('th');
+            th1.innerText = 'Challenge';
+            trHeader.appendChild(th1);
+            var th2 = document.createElement('th');
+            th2.innerText = 'Elapsed Time';
+            trHeader.appendChild(th2);
+            tblEl.appendChild(trHeader);
+            this.#challengeCompletionTimes.forEach((time, index) => {
+                var tr = document.createElement('tr');
+                var td1 = document.createElement('td');
+                td1.innerText = `Challenge ${index + 1}`;
+                tr.appendChild(td1);
+                var td2 = document.createElement('td');
+                // render in hh:mm:ss
+                let hours = Math.floor(time / 3600);
+                let minutes = Math.floor((time % 3600) / 60);
+                let seconds = parseInt(time % 60);
+                td2.innerText = (hours < 10 ? "0" + hours : hours) + ":" +
+                                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                                (seconds < 10 ? "0" + seconds : seconds);
+                tr.appendChild(td2);
+                tblEl.appendChild(tr);
+            });
         }
     }
 
@@ -138,6 +172,23 @@ class StopWatch {
                             (seconds < 10 ? "0" + seconds : seconds);
             document.getElementById("timer-time").innerText = timeString;
         }
+    }
+
+    async getChallengeCompletionTimes() {
+        var data = await fetch("/api/get/statistics/challenge-completion-times")
+            .then(response => response.json());
+        if(data.challengeTimes && typeof data.challengeTimes === "object") {
+            // sort by key
+            let completionTimes = [];
+            Object.keys(data.challengeTimes).sort().forEach(function(key) {
+                if(key.toLowerCase().startsWith("challenge")) {
+                    completionTimes.push(data.challengeTimes[key]);
+                }
+            });
+            console.log("Challenge Completion Times", completionTimes);
+            return completionTimes;
+        }
+        throw "Invalid Challenge Completion Times";
     }
 
     async getTimerInfo() {
