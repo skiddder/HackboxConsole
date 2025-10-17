@@ -29,7 +29,15 @@ HackBox Console - Challenges
 
 
 <!-- Render Markdown -->
-<zero-md id="zeromd" src=""></zero-md>
+<zero-md id="zeromd" src="">
+	<template>
+		<style>
+			:host { display: block; position: relative; contain: content; }
+			:host([hidden]) { display: none; }
+		</style>
+		<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/zeromd.css') }}" />
+	</template>
+</zero-md>
 
 {% endblock %}
 
