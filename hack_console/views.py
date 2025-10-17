@@ -276,15 +276,16 @@ def api_get_challenge():
         return redirect(url_for("login"))
     try:
         hbSettings = HackBoxSettings(current_user.tenant)
+        step = hbSettings.getStep()
         try:
-            # stop watch not (yet) running, start it now for hackers
-            if current_user.role == "hacker":
+            # when the hack begins, start the stopwatch for hackers automatically
+            if step == 1 and current_user.role == "hacker":
                 status, startTime, secondsElapsed = hbSettings.getStopwatch()
                 if status != "running":
                     hbSettings.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc), 0)
         except:
             pass
-        return jsonify({"success": True, "challenge" : hbSettings.getStep()})
+        return jsonify({"success": True, "challenge" : step })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
