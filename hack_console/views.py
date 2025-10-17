@@ -367,6 +367,8 @@ def api_get_stopwatch():
     try:
         hbSettings = HackBoxSettings(current_user.tenant)
         status, startTime, secondsElapsed = hbSettings.getStopwatch()
+        if startTime is not None:
+            startTime = startTime.isoformat()
         return jsonify({"success": True, "status" : status, "startTime": startTime, "secondsElapsed": secondsElapsed })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -390,6 +392,8 @@ def api_set_stopwatch():
         hbSettings = HackBoxSettings(current_user.tenant)
         hbSettings.setStopwatch(data["status"], data["startTime"], data["secondsElapsed"])
         status, startTime, secondsElapsed = hbSettings.getStopwatch()
+        if startTime is not None:
+            startTime = startTime.isoformat()
         return jsonify({"success": True, "status" : status, "startTime": startTime, "secondsElapsed": secondsElapsed})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
