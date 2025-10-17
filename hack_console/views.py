@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+import datetime
 import json, os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
 from . import app, all_users, HackBoxUser
@@ -113,16 +113,16 @@ class HackBoxSettings:
             return 1
         return step["Step"]
 
-    def setStopwatch(self, status : str, startTime : Union[datetime, str, None], secondsElapsed: int) -> None:
+    def setStopwatch(self, status : str, startTime : Union[datetime.datetime, str, None], secondsElapsed: int) -> None:
         if status not in ["running", "stopped"]:
             raise ValueError("status must be 'running' or 'stopped'")
         if startTime is None:
             startTime = ""
-        elif isinstance(startTime, datetime):
+        elif isinstance(startTime, datetime.datetime):
             startTime = startTime.isoformat()
         elif isinstance(startTime, str):
             try:
-                startTime = datetime.fromisoformat(startTime).isoformat()
+                startTime = datetime.datetime.fromisoformat(startTime).isoformat()
             except Exception:
                 raise ValueError("startTime must be a datetime object or an ISO 8601 string")
         else:
@@ -134,7 +134,7 @@ class HackBoxSettings:
         self.set("Stopwatch", {"status": status, "startTime": startTime, "secondsElapsed": secondsElapsed})
         return self
 
-    def getStopwatch(self) -> Tuple[str, Union[datetime, None], int]:
+    def getStopwatch(self) -> Tuple[str, Union[datetime.datetime, None], int]:
         ti = self.get("Stopwatch")
         status = "stopped"
         startTime = None
@@ -152,7 +152,7 @@ class HackBoxSettings:
                 startTime = None
             else:
                 try:
-                    startTime = datetime.fromisoformat(startTime)
+                    startTime = datetime.datetime.fromisoformat(startTime)
                 except Exception:
                     startTime = None
         return status, startTime, secondsElapsed
@@ -305,6 +305,14 @@ def api_set_challenge():
         if data["challenge"] < 1 or data["challenge"] > len(challenges_mds) + 1:
             return jsonify({"success": False, "error": "Challenge not found"}), 404
         hbSettings.setStep(data["challenge"])
+        try:
+            if data["challenge"] > len(challenges_mds):
+                hbSettings.setStopwatch("stopped", None, 0)
+            else:
+                hbSettings.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc), 0)
+        except Exception as e:
+            print("Could not reset stopwatch:", e)
+            pass
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
