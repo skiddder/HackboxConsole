@@ -483,4 +483,11 @@ def static_challenges(filename):
                     return "# Challenge not yet available", 404, {"Content-Type": "text/markdown"}
         return send_from_directory(challenges_dir, filename)
     return redirect(url_for("login"))
+
+@app.route('/favicon.ico')
+def static_favicon():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", "assets"), 'img/favicon.ico', mimetype='image/x-icon')
+@app.route('/site.webmanifest.json')
+def static_webmanifest():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", "assets"), 'img/site.webmanifest.json', mimetype='application/manifest+json')
 #endregion -------- STATIC ENDPOINTS --------
