@@ -1,8 +1,6 @@
 param (
-    [Parameter(Mandatory = $true)]
-    [string]$SourceChallengesDir,
-    [Parameter(Mandatory = $true)]
-    [string]$SourceSolutionsDir,
+    [string]$SourceChallengesDir = "",
+    [string]$SourceSolutionsDir = "",
     [string]$ResourceGroupName = "HackConsole",
 
     [string]$location = $null,
@@ -25,14 +23,14 @@ $consoleRoot = Split-Path -Parent $scriptPath
 
 
 # does the file exist?
-if(-not (Test-Path (Join-Path $consoleRoot "user.json") -PathType Leaf)) {
+if(-not (Test-Path (Join-Path $consoleRoot "users.json") -PathType Leaf)) {
     if($hackerUsername -eq "" -or $coachUsername -eq "" -or $hackerPassword -eq $null -or $coachPassword -eq $null) {
-         throw "Either provide the user.json file or provide all four parameters: hackerUsername, hackerPassword, coachUsername, coachPassword"
+         throw "Either provide the users.json file or provide all four parameters: hackerUsername, hackerPassword, coachUsername, coachPassword"
     }
 }
 else {
     if($hackerUsername -ne "" -or $coachUsername -ne "" -or $hackerPassword -ne $null -or $coachPassword -ne $null) {
-        Write-Warning "Both user.json file and user parameters provided. The user.json file will be used."
+        Write-Warning "Both users.json file and user parameters provided. The user.json file will be used."
     }
     $hackerUsername = "hacker"
     $hackerPassword = ConvertTo-SecureString -String "hackerPassword" -AsPlainText -Force
@@ -41,6 +39,12 @@ else {
 }
 
 if(-not $doNotCopyChallengesOrSolutions) {
+    if($SourceChallengesDir -eq "") {
+        throw "SourceChallengesDir must be provided"
+    }
+    if($SourceSolutionsDir -eq "") {
+        throw "SourceSolutionsDir must be provided"
+    }
     if(-not (Test-Path $SourceChallengesDir -PathType Container)) {
         throw "SourceChallengesDir must be a directory"
     }
