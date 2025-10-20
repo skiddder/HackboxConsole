@@ -30,8 +30,9 @@ if(-not (Test-Path (Join-Path $consoleRoot "users.json") -PathType Leaf)) {
 }
 else {
     if($hackerUsername -ne "" -or $coachUsername -ne "" -or $hackerPassword -ne $null -or $coachPassword -ne $null) {
-        Write-Warning "Both users.json file and user parameters provided. The user.json file will be used."
+        Write-Warning "Both users.json file and user parameters provided. The users.json file will be used."
     }
+    # use defaults for template / they will be ignored by the application if users.json is present
     $hackerUsername = "hacker"
     $hackerPassword = ConvertTo-SecureString -String "hackerPassword" -AsPlainText -Force
     $coachUsername = "coach"
@@ -108,7 +109,20 @@ if(-not($null -eq $sku -or $sku -eq "")) {
 if(-not($null -eq $workerSize -or $workerSize -eq "")) {
     $params["workerSize"] = $workerSize
 }
-$deployment = New-AzResourceGroupDeployment @params -ErrorAction Stop
+$deployment = New-AzResourceGroupDeployment @params -Name "hackboxconsole"  -ErrorAction Continue -ErrorVariable +evx
+if($null -eq $deployment) {
+    foreach($ev in $evx) {
+        if($ev.Exception.Message.Contains('soft-deleted')) {
+            Write-Host -ForegroundColor Yellow "Soft deleted resource found:`n$($ev.Exception.Message)"
+        }
+        elseif($ev.Exception.Message.Contains('quota')) {
+            Write-Host -ForegroundColor Yellow "Quota exceeded:`n$($ev.Exception.Message)"
+        }
+    }
+    throw "Deployment failed"
+}
+
+
 Write-Host "Deployment completed"
 Write-Host ( "  - Web App Name:         " + $deployment.Outputs.webAppName.Value )
 Write-Host ( "  - Web App URL:          https://" + $deployment.Outputs.webAppUrl.Value )
