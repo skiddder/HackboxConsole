@@ -75,8 +75,8 @@ class StopWatch {
         console.log("Refreshing");
         try{
             this.#timerInfo = await this.getTimerInfo();
-            this.#challengeCompletionTimes = await this.getChallengeCompletionTimes();
             this.#render();
+            this.#challengeCompletionTimes = await this.getChallengeCompletionTimes();
             this.#renderCompletionTimes();
         }
         finally {
