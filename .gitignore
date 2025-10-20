@@ -10,3 +10,4 @@ env
 /hack_console/solutions/*
 /hack_console/solutions/**/*
 /users.json
+/iac/hack_console.zip
