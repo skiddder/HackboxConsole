@@ -147,15 +147,18 @@ if(-not $doNotCleanUp) {
     # clean up the zip package
     Remove-Item -Path $zipPackagePath -Force | Out-Null
 
-    # clean up the challenges directory
-    Remove-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Force | Out-Null
-    New-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -ItemType Directory | Out-Null
-    New-Item -Path (Join-Path $consoleRoot "hack_console" "challenges" ".gitkeep") -ItemType File | Out-Null
+    # just clean up the challenges and solutions directories, in case they got copied before
+    if(-not $doNotCopyChallengesOrSolutions) {
+        # clean up the challenges directory
+        Remove-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -Recurse -Force | Out-Null
+        New-Item -Path (Join-Path $consoleRoot "hack_console" "challenges") -ItemType Directory | Out-Null
+        New-Item -Path (Join-Path $consoleRoot "hack_console" "challenges" ".gitkeep") -ItemType File | Out-Null
 
-    # clean up the solutions directory
-    Remove-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Force | Out-Null
-    New-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -ItemType Directory | Out-Null
-    New-Item -Path (Join-Path $consoleRoot "hack_console" "solutions" ".gitkeep") -ItemType File | Out-Null
+        # clean up the solutions directory
+        Remove-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -Recurse -Force | Out-Null
+        New-Item -Path (Join-Path $consoleRoot "hack_console" "solutions") -ItemType Directory | Out-Null
+        New-Item -Path (Join-Path $consoleRoot "hack_console" "solutions" ".gitkeep") -ItemType File | Out-Null
+    }
 }
 
 
