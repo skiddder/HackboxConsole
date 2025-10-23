@@ -78,6 +78,9 @@ class TechleadManagement {
             table.className = 'generic';
             table.innerHTML = '<tr><th>Setting</th><th>Value</th></tr>';
             for(const [key, value] of Object.entries(settings)) {
+                if(key == 'MaxStep') {
+                    continue;
+                }
                 const row = document.createElement('tr');
                 const cellKey = document.createElement('td');
                 cellKey.textContent = key;
