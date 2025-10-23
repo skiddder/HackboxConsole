@@ -24,7 +24,7 @@ class HackBoxUser(UserMixin):
         self.username = str(username).lower().strip()
         self.password = str(password)
         self.role = str(role).lower().strip()
-        self.role = role if role in ["hacker", "coach"] else "hacker"
+        self.role = role if role in ["hacker", "coach", "techlead"] else "hacker"
         self.tenant = str(tenant).strip()
         self.id = str(username).lower().strip()
 
@@ -42,7 +42,7 @@ def create_all_users():
                     else:
                         tenant = "Default"
                     role = str(usr["role"]).lower().strip()
-                    if role not in ["hacker", "coach"]:
+                    if role not in ["hacker", "coach", "techlead"]:
                         role = "hacker"
                     print(f"Adding user {usr['username']} with role {role} and tenant {tenant}")
                     allUsers[str(usr["username"]).lower().strip()] = HackBoxUser(
@@ -69,6 +69,10 @@ def create_all_users():
     return allUsers
 
 all_users = create_all_users()
+all_tenants = set()
+for user in all_users.values():
+    all_tenants.add(user.tenant)
+all_tenants = list(all_tenants)
 
 @login_manager.user_loader
 def loader_user(user_id):

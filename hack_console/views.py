@@ -1,7 +1,8 @@
 import datetime
 import json, os
+import traceback
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
-from . import app, all_users, HackBoxUser
+from . import app, all_users, all_tenants, HackBoxUser
 from flask_login import login_user, login_required, logout_user, current_user
 from azure.data.tables import TableServiceClient
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
@@ -100,11 +101,62 @@ class HackBoxSettings:
     def sanitizeGroup(self, group: str) -> str:
         return "".join([c for c in group if c.isalnum() or c == "_" or c == "-"]).strip()
 
-    def setStep(self, step: int):
-        if step < 1:
+    def setPropagatedStep(self, step: Union[int, str]) -> None:
+        reset_triggered = False
+        previous_step = self.getStep()
+        if isinstance(step, str):
+            if str(step).lower().strip() == "decrease":
+                step = previous_step - 1
+            elif str(step).lower().strip() == "increase":
+                step = previous_step + 1
+            elif str(step).lower().strip() == "first":
+                step = 1
+                reset_triggered = True
+            elif str(step).lower().strip() == "last":
+                step = len(challenges_mds) + 1
+        step = int(step)
+        self.setStep(step)
+        # log challenge time for previous step
+        try:
+            if reset_triggered:
+                self.set("ChallengeCompletionSeconds", {}, group="Statistics")
+            elif previous_step <= len(challenges_mds):
+                if step > previous_step:
+                    # log the challenge time
+                    status, startTime, secondsElapsed = self.getStopwatch()
+                    if status == "running" and startTime is not None:
+                        # calculate elapsed time
+                        secondsElapsed = (datetime.datetime.now(datetime.timezone.utc) - startTime).total_seconds()
+                        challengeTimes = self.get("ChallengeCompletionSeconds", group="Statistics")
+                        if challengeTimes is None:
+                            challengeTimes = {}
+                        challengeTimes[f"Challenge{previous_step:03d}"] = float(secondsElapsed)
+                        self.set("ChallengeCompletionSeconds", challengeTimes, group="Statistics")
+                        print(f"Logged challenge time for challenge {previous_step:d} for tenant {self._tenantName}: {secondsElapsed} seconds")
+                else:
+                    challengeTimes = self.get("ChallengeCompletionSeconds", group="Statistics")
+                    if f"Challenge{previous_step:03d}" in challengeTimes:
+                        del challengeTimes[f"Challenge{previous_step:03d}"]
+                        self.set("ChallengeCompletionSeconds", challengeTimes, group="Statistics")
+                        print(f"Removed challenge time for challenge {previous_step:d} for tenant {self._tenantName} due to step decrease")
+
+        except Exception as e:
+            print("Could not log challenge time", e)
+            traceback.print_exc()
+        # reset stopwatch
+        try:
+            if step > len(challenges_mds):
+                self.setStopwatch("stopped", None, 0)
+            else:
+                self.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc), 0)
+        except Exception as e:
+            print("Could not reset stopwatch:", e)
+            pass
+        
+    def setStep(self, step: int) -> None:    
+        if step < 1 or step > len(challenges_mds) + 1:
             raise ValueError("Step cannot be less than 1")
-        self.set("CurrentStep", {"Step": step})
-        return self
+        self.set("CurrentStep", {"Step": step})   
     def getStep(self) -> int:
         step = self.get("CurrentStep")
         if step is None:
@@ -239,6 +291,16 @@ def webtimer():
         return redirect(url_for("home"))
     return render_template("webtimer.html", user=current_user)
 
+@app.route("/techlead")
+def techlead():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    if current_user.role not in ["techlead"]:
+        return redirect(url_for("home"))
+    return render_template("techlead.html", user=current_user)
 
 @app.route("/logout")
 def logout():
@@ -298,52 +360,11 @@ def api_set_challenge():
     if current_user.role != "coach":
         return jsonify({"success": False, "error": "Unauthorized"}), 403
     try:
-        reset_triggered = False
         data = request.get_json()
         if "challenge" not in data:
             return jsonify({"success": False, "error": "Missing challenge"}), 400
         hbSettings = HackBoxSettings(current_user.tenant)
-        previous_step = hbSettings.getStep()
-        if str(data["challenge"]).lower().strip() == "decrease":
-            data["challenge"] = hbSettings.getStep() - 1
-        elif str(data["challenge"]).lower().strip() == "increase":
-            data["challenge"] = hbSettings.getStep() + 1
-        elif str(data["challenge"]).lower().strip() == "first":
-            data["challenge"] = 1
-            reset_triggered = True
-        elif str(data["challenge"]).lower().strip() == "last":
-            data["challenge"] = len(challenges_mds) + 1
-        data["challenge"] = int(data["challenge"])
-        if data["challenge"] < 1 or data["challenge"] > len(challenges_mds) + 1:
-            return jsonify({"success": False, "error": "Challenge not found"}), 404
-        hbSettings.setStep(data["challenge"])
-        # log challenge time for previous step
-        try:
-            if reset_triggered:
-                hbSettings.set("ChallengeCompletionSeconds", {}, group="Statistics")
-            elif previous_step <= len(challenges_mds):
-                # log the challenge time
-                status, startTime, secondsElapsed = hbSettings.getStopwatch()
-                if status == "running" and startTime is not None:
-                    # calculate elapsed time
-                    secondsElapsed = (datetime.datetime.now(datetime.timezone.utc) - startTime).total_seconds()
-                    challengeTimes = hbSettings.get("ChallengeCompletionSeconds", group="Statistics")
-                    if challengeTimes is None:
-                        challengeTimes = {}
-                    challengeTimes[f"Challenge{previous_step:03d}"] = float(secondsElapsed)
-                    hbSettings.set("ChallengeCompletionSeconds", challengeTimes, group="Statistics")
-                    print(f"Logged challenge time for challenge {previous_step:d}: {secondsElapsed} seconds")
-        except Exception as e:
-            print("Could not log challenge time", e)
-        # reset stopwatch
-        try:
-            if data["challenge"] > len(challenges_mds):
-                hbSettings.setStopwatch("stopped", None, 0)
-            else:
-                hbSettings.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc), 0)
-        except Exception as e:
-            print("Could not reset stopwatch:", e)
-            pass
+        hbSettings.setPropagatedStep(data["challenge"])
         return jsonify({"success": True, "challenge" : hbSettings.getStep()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -448,6 +469,79 @@ def api_get_statistics_challenge_completion_times():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@login_required
+@app.route("/api/get/tenants/settings")
+def api_get_tenants_settings():
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    if current_user.role != "techlead":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        tenants_settings = {}
+        for tenant in all_tenants:
+            hbSettings = HackBoxSettings(tenant)
+            status, startTime, secondsElapsed = hbSettings.getStopwatch()
+            if startTime is not None:
+                startTime = startTime.isoformat()
+            tenants_settings[tenant] = {
+                "CurrentStep": hbSettings.getStep(),
+                "Stopwatch": (status, startTime, secondsElapsed),
+                "MaxStep": len(challenges_mds) + 1
+            }
+        return jsonify({"success": True, "tenants": tenants_settings})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+@login_required
+@app.route("/api/set/tenants/settings", methods=["POST"])
+def api_set_tenants_settings():
+    if not isinstance(current_user, HackBoxUser):
+        logout_user()
+        return redirect(url_for("login"))
+    if current_user.role != "techlead":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        data = request.get_json()
+        # data is a dict
+        if not isinstance(data, dict):
+            return jsonify({"success": False, "error": "Invalid data"}), 400
+        for tenant in data:
+            if tenant not in all_tenants:
+                continue
+            hbSettings = HackBoxSettings(tenant)
+            if "CurrentStep" in data[tenant]:
+                try:
+                    hbSettings.setPropagatedStep(data[tenant]["CurrentStep"])
+                except:
+                    print(f"Could not set step for tenant {tenant}")
+                data[tenant]["CurrentStep"] = hbSettings.getStep()
+            if "Stopwatch" in data[tenant]:
+                if isinstance(data[tenant]["Stopwatch"], list) and len(data[tenant]["Stopwatch"]) == 3:
+                    hbSettings.setStopwatch(*data[tenant]["Stopwatch"])
+                elif isinstance(data[tenant]["Stopwatch"], str):
+                    data[tenant]["Stopwatch"] = data[tenant]["Stopwatch"].lower().strip()
+                    if data[tenant]["Stopwatch"] == "reset":
+                        hbSettings.setStopwatch("stopped", None, 0)
+                    elif data[tenant]["Stopwatch"] == "stop":
+                        status, startTime, secondsElapsed = hbSettings.getStopwatch()
+                        if status == "running" and startTime is not None:
+                            # calculate elapsed time
+                            secondsElapsed += (datetime.datetime.now(datetime.timezone.utc) - startTime).total_seconds()
+                            hbSettings.setStopwatch("stopped", None, int(secondsElapsed))
+                    elif data[tenant]["Stopwatch"] == "start":
+                        status, startTime, secondsElapsed = hbSettings.getStopwatch()
+                        if status != "running":
+                            hbSettings.setStopwatch("running", datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=secondsElapsed), 0)
+                    elif data[tenant]["Stopwatch"] == "reset":
+                        hbSettings.setStopwatch("stopped", None, 0)
+                status, startTime, secondsElapsed = hbSettings.getStopwatch()
+                if startTime is not None:
+                    startTime = startTime.isoformat()
+                data[tenant]["Stopwatch"] = (status, startTime, secondsElapsed)
+        return jsonify({"success": True, "tenants": data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 #endregion -------- API ENDPOINTS --------
 

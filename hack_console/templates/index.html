@@ -8,6 +8,9 @@ HackBox Console - Challenges
 {% endblock %}
 {% block content %}
 <h1 class="page-title">Welcome 👋</h1>
+{% if user and user.is_authenticated and user.role == 'techlead' %}
+<p class="lead">As a Tech Lead, you can manage everything.</p>
+{% else %}
 <p class="lead">Dive into challenges and track your progress.</p>
 <div class="card-grid">
 	<div class="card washed pop spin-hov-alt">
@@ -54,6 +57,7 @@ HackBox Console - Challenges
 	<h2 class="celebration-header">Congratulations you have completed all challenges! 🎉</h2>
 	<img src="{{ url_for('static', filename='assets/img/challengesCompleted.jpg') }}" alt="Hackathon Challenges Completed" title="Hackathon Challenges Completed" class="celebration-image" />
 </div>
+{% endif %}
 
 {% endblock %}
 

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}
+HackBox Console - Techlead Management
+{% endblock %}
+{% block headloadscript %}
+{% endblock %}
+{% block toolbar %}
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Techlead Management</h1>
+
+
+<div id="techlead-management">Loading...
+</div>
+
+<!--
+<div class="card">
+	<div class="watch-display" id="timer-time" aria-live="polite">00:00:00</div>
+</div>
+
+<h1 class="page-title">Challenge Completion Times</h1>
+<table class="generic" id="challenge-completion-times-table">
+</table>
+-->
+
+
+{% endblock %}
+
+{% block bottomloadscript %}
+<script src="{{ url_for('static', filename='assets/js/techlead.js') }}"></script>
+{% endblock %}

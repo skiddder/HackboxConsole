@@ -78,3 +78,31 @@ Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 -st
 # for json array of objects with required attributes: name, value   (optional attributes: group, tenant)
 Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -storageAccountName "storage...." 
 ```
+
+
+## users.json - Multi Tenant User Definition
+
+Just rename the [sample-users.json](sample-users.json) file to ``users.json``.
+The file has the following structure:
+```json
+[
+    {
+        "username": "admin",
+        "password": "admin",
+        "role": "coach",
+        "tenant": "Default"
+    }
+]
+```
+
+| Attribute | Description |
+|-----------|-------------|
+| username  | The username of the user |
+| password  | The password of the user |
+| role      | The role of the user: coach, hacker, techlead |
+| tenant    | The tenant the user belongs to (each tenant must have at least one coach and one hacker) (optional value) |
+
+Roles:
+- **coach**: Can see unlocked challenges, solutions and credentials within his tenant. Can unlock challenges for hackers.
+- **hacker**: Can see only unlocked challenges and credentials within his tenant.
+- **techlead**: Can start/stop/reset timers and unlock challenges across all tenants.

@@ -36,6 +36,9 @@
 				<a href="{{ url_for('credentials') }}" class="nav-btn"{% if request.url_rule.endpoint == 'credentials' %} aria-current="page"{% endif %}>Credentials</a>
 				<a href="{{ url_for('webtimer') }}" class="nav-btn"{% if request.url_rule.endpoint == 'webtimer' %} aria-current="page"{% endif %}>Timer</a>
 				{% endif %}
+				{% if user and user.is_authenticated and user.role == 'techlead' %}
+				<a href="{{ url_for('techlead') }}" class="nav-btn"{% if request.url_rule.endpoint == 'techlead' %} aria-current="page"{% endif %}>Techlead</a>
+				{% endif %}
 			</nav>
 			<div class="utility">
 				{% if user and user.is_authenticated %}<a href="{{ url_for('logout') }}" class="nav-btn">Logout</a>{% else %}<a href="#" class="nav-btn login-btn" id="loginBtn" aria-label="Login">Login</a>{% endif %}

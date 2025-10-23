@@ -101,7 +101,28 @@ body {
   backdrop-filter:blur(10px) saturate(160%);
   border-bottom:1px solid rgba(0,0,0,.05);
 }
+.toolbar {
+  display:flex; gap:.75rem; align-items:center;
+  justify-content:space-between; flex-wrap:wrap; 
+}
 .toolbar-group { display:flex; gap:.5rem; align-items:center; }
+.toolbar-group.highlighted-group {
+  /*  */
+  background: linear-gradient(90deg, rgba(255,111,94,.33), rgba(255,176,118,.33) 45%, rgba(255,211,140,.33));
+  box-shadow: 0 0 0 1px rgba(255,176,118,.18);
+  padding:8px 8px; border-radius:1000px;
+}
+.toolbar-group.highlighted-group .title {
+  background: linear-gradient(90deg,#4a2d9f,#6f63ff);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+.toolbar-group .title {
+  font-family:var(--font-display); font-weight:600;
+  font-size:.9rem; letter-spacing:.5px;
+  color:var(--color-text-soft);
+}
 
 .pill-btn {
   font-family:var(--font-display); letter-spacing:.5px;
@@ -117,6 +138,7 @@ body {
 }
 .pill-btn.success { background:linear-gradient(90deg,#33b679,#4bd98f); color:#083a23; }
 .pill-btn.warn { background:linear-gradient(90deg,#ffb347,#ffd480); color:#4d3200; }
+.pill-btn.danger { background:linear-gradient(90deg,#ff4d61,#ff7a85); color:#59000c; }
 .pill-btn.current { background:linear-gradient(90deg,#6f63ff,#8a82ff); color:#fff; cursor:default; }
 .pill-btn.disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
 .pill-btn:not(.disabled):not(.current):hover { transform:translateY(-3px); }
