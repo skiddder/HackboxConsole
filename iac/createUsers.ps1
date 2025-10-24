@@ -1,6 +1,6 @@
 param(
     [ValidateRange(1,200)]
-    [int]$numberOfTenants=2,
+    [int]$numberOfTenants=4,
     [string]$baseHackerUsername="hacker",
     [string]$baseCoachUsername="coach",
     [ValidateSet("simple","complex")]
@@ -68,7 +68,7 @@ function generatePassword {
 
 
 $users = @()
-if($disableTechleadUser) {
+if($disableTechleadUser -or $numberOfTenants -le 1) {
     Write-Host "Techlead user creation is disabled."
  }
 else {
