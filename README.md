@@ -81,8 +81,8 @@ Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -
 
 
 ## users.json - Multi Tenant User Definition
-
-Just rename the [sample-users.json](sample-users.json) file to ``users.json``.
+The easiest way to create the ``users.json`` file is to use the [createUsers.ps1](iac/createUsers.ps1) script.
+Alternatively, you can copy the [sample-users.json](sample-users.json) file to ``users.json`` and then modify it to fit your needs.
 The file has the following structure:
 ```json
 [
