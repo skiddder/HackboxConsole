@@ -101,6 +101,6 @@ The file has the following structure:
 |-----------|-----------|-------------|
 | username  | **required** | The username of the user  |
 | password  | **required** | The password of the user  |
-| role      | **required** | The role of the user:<ul><li>**coach**: Can see unlocked challenges, solutions and credentials within his tenant. Can unlock challenges for hackers.</li><li>**hacker**: Can see only unlocked challenges and credentials within his tenant.</li><li>**techlead**: Can start/stop/reset timers and unlock challenges across all tenants.</li></ul> |
+| role      | **required** | The role of the user:<ul><li>**coach**: Can see unlocked challenges, solutions and credentials within his tenant. Can unlock challenges for hackers.</li><li>**hacker**: Can see only unlocked challenges and credentials within his tenant.</li><li>**techlead**: Can start/stop/reset timers and unlock challenges across all tenants. (Just create a techlead, if you have a more than 3 tenants.)</li></ul> |
 | tenant    | **optional** | The tenant the user belongs to (each tenant must have at least one coach and one hacker) |
 
