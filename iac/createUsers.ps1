@@ -1,5 +1,5 @@
 param(
-    [ValidateRange(1,100)]
+    [ValidateRange(1,200)]
     [int]$numberOfTenants=2,
     [string]$baseHackerUsername="hacker",
     [string]$baseCoachUsername="coach",
@@ -8,7 +8,11 @@ param(
     [ValidateSet("simple","complex")]
     [string]$coachPasswordStrength="complex",
     [string[]]$simplePasswordAdjectives = @(),
-    [string[]]$simplePasswordNouns = @()
+    [string[]]$simplePasswordNouns = @(),
+    [ValidateRange(12,64)]
+    [int]$complexPasswordLength = 16,
+    [switch]$complexPasswordAllowSpecialChars,
+    [switch]$disableTechleadUser
 
 )
 
@@ -22,15 +26,17 @@ function generatePassword {
         [ValidateSet("simple","complex")]
         [string]$strength="simple",
         [string[]]$simpleAdjectives = @(),
-        [string[]]$simpleNouns = @()
+        [string[]]$simpleNouns = @(),
+        [ValidateRange(12,64)]
+        [int]$complexLength = 16,
+        [switch]$complexAllowSpecialChars
     )
     if($strength -eq "simple") {
         # simple password
-        $length = 8
         if($null -ne $simpleAdjectives -and $simpleAdjectives.Count -gt 0) {
             $adjectives = $simpleAdjectives
         } else {
-            $adjectives = @('big','small','tasty', 'sweet','sour','fresh','ripe','juicy','delicious','yummy','crisp','zesty','fruity','succulent', 'flavorful')
+            $adjectives = @('big','small','tasty','sweet','sour','fresh','ripe','juicy','delicious','yummy','crisp','zesty','fruity','succulent', 'flavorful')
         }
         if($null -ne $simpleNouns -and $simpleNouns.Count -gt 0) {
             $fruits = $simpleNouns
@@ -40,28 +46,57 @@ function generatePassword {
         # password is adjective + fruit + 2 digit number
         return ($adjectives | Get-Random) + "-" + ($fruits | Get-Random) + "-" + (Get-Random -Minimum 10 -Maximum 99).ToString()
 
-    } else {
+    }
+    else {
         # complex password
-        $length = 16
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        return -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+        $specialChars = '!@#&$/*-_=+;:,.?'
+
+        $pwd = -join ((1..$complexLength) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+        if($complexAllowSpecialChars) {
+            # replace some characters with special characters
+            $numSpecialChars = [Math]::Max(1, [Math]::Floor($complexLength / 8))
+            for($i=0; $i -lt $numSpecialChars; $i++) {
+                $pos = Get-Random -Minimum 2 -Maximum $complexLength
+                $specialChar = $specialChars[(Get-Random -Maximum $specialChars.Length)]
+                $pwd = $pwd.Substring(0, $pos - 1) + $specialChar + $pwd.Substring($pos)
+            }
+        }
+        return $pwd        
     }
 }
 
 
 $users = @()
-for ($i = 1; $i -le $numberOfTenants; $i++) {
+if($disableTechleadUser) {
+    Write-Host "Techlead user creation is disabled."
+ }
+else {
+    # add a techlead user (always with highest complex password + 4 extra length)
     $users += [PSCustomObject]@{
-        "username" = ( $baseHackerUsername + $i )
-        "password" = ( generatePassword -strength $hackerPasswordStrength -simpleAdjectives $simplePasswordAdjectives -simpleNouns $simplePasswordNouns )
+        "username" = "techlead1"
+        "password" = ( generatePassword -strength "complex" -complexLength ($complexPasswordLength + 4) -complexAllowSpecialChars )
+        "role" = "techlead"
+    }
+}
+
+# digits of numberOfTenants
+$tenantDigits = $numberOfTenants.ToString().Length
+
+# add hacker and coach users for each tenant
+for ($i = 1; $i -le $numberOfTenants; $i++) {
+    $paddedIndex = $i.ToString().PadLeft($tenantDigits, '0')
+    $users += [PSCustomObject]@{
+        "username" = ( $baseHackerUsername + $paddedIndex )
+        "password" = ( generatePassword -strength $hackerPasswordStrength -simpleAdjectives $simplePasswordAdjectives -simpleNouns $simplePasswordNouns -complexLength $complexPasswordLength -complexAllowSpecialChars:$complexPasswordAllowSpecialChars )
         "role" = "hacker"
-        "tenant" = ( "team" + $i )
+        "tenant" = ( "team" + $paddedIndex )
     }
     $users += [PSCustomObject]@{
-        "username" = ( $baseCoachUsername + $i )
-        "password" = ( generatePassword -strength $coachPasswordStrength -simpleAdjectives $simplePasswordAdjectives -simpleNouns $simplePasswordNouns )
+        "username" = ( $baseCoachUsername + $paddedIndex )
+        "password" = ( generatePassword -strength $coachPasswordStrength -simpleAdjectives $simplePasswordAdjectives -simpleNouns $simplePasswordNouns -complexLength $complexPasswordLength -complexAllowSpecialChars:$complexPasswordAllowSpecialChars )
         "role" = "coach"
-        "tenant" = ( "team" + $i )
+        "tenant" = ( "team" + $paddedIndex )
     }
 }
 
