@@ -291,6 +291,10 @@ class SolutionManager {
                 // ignore when focused on input or textarea or contenteditable
                 return;
             }
+            // ignore key presses with modifier keys (Ctrl, Alt, Shift, Meta)
+            if(event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
+                return;
+            }
             if(event.key === 'ArrowLeft' || event.key === 'p') {
                 if(this.#isSubSite) {
                     this.navToCurrentSolution();

@@ -387,6 +387,10 @@ class ChallengeManager {
                 // ignore when focused on input or textarea or contenteditable
                 return;
             }
+            // ignore key presses with modifier keys (Ctrl, Alt, Shift, Meta)
+            if(event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
+                return;
+            }
             this.#closeDialog(); // in case the dialog is open, close it
             if(event.key === 'ArrowLeft' || event.key === 'p') {
                 this.navToPreviousChallenge();
