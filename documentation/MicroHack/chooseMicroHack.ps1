@@ -196,6 +196,11 @@ else {
     New-Item -Path "$script:MicroHackRepo-Student" -ItemType Directory | Out-Null
     Get-ChildItem -Path $chosenHack.Path | Where-Object { $_.Name -ne "walkthrough" }  | Copy-Item -Destination "$script:MicroHackRepo-Student" -Recurse -Force | Out-Null
     Get-ChildItem -Path (Join-Path "$script:MicroHackRepo-Student" "challenges") -Recurse -Filter *.md  | Remove-Item -Recurse -Force | Out-Null
+    # for BCDR_Azure_Native, remove challenges & img folder entirely
+    if($chosenHack.Name -eq "04_BCDR_Azure_Native") {
+         Remove-Item -Recurse -Force -Path (Join-Path "$script:MicroHackRepo-Student" "challenges") | Out-Null
+         Remove-Item -Recurse -Force -Path (Join-Path "$script:MicroHackRepo-Student" "img") | Out-Null
+    }
     Get-ChildItem "$script:MicroHackRepo-Student" -Directory | Compress-Archive -DestinationPath (Join-Path $script:ConsoleRoot "hack_console" "challenges" "download-Student.zip") -Force | Out-Null
     Remove-Item "$script:MicroHackRepo-Student" -Recurse -Force | Out-Null
 
@@ -206,6 +211,11 @@ else {
     New-Item -Path "$script:MicroHackRepo-Coach" -ItemType Directory | Out-Null
     Get-ChildItem -Path $chosenHack.Path | Where-Object { $_.Name -ne "challenges" }  | Copy-Item -Destination "$script:MicroHackRepo-Coach" -Recurse -Force | Out-Null
     Get-ChildItem -Path (Join-Path "$script:MicroHackRepo-Coach" "walkthrough") -Recurse -Filter *.md  | Remove-Item -Recurse -Force | Out-Null
+    # for BCDR_Azure_Native, remove walkthrough & img folder entirely
+    if($chosenHack.Name -eq "04_BCDR_Azure_Native") {
+         Remove-Item -Recurse -Force -Path (Join-Path "$script:MicroHackRepo-Coach" "walkthrough") | Out-Null
+         Remove-Item -Recurse -Force -Path (Join-Path "$script:MicroHackRepo-Coach" "img") | Out-Null
+    }
     Get-ChildItem "$script:MicroHackRepo-Coach" -Directory | Compress-Archive -DestinationPath (Join-Path $script:ConsoleRoot "hack_console" "solutions" "download-Coach.zip") -Force | Out-Null
     Remove-Item "$script:MicroHackRepo-Coach" -Recurse -Force | Out-Null
 
