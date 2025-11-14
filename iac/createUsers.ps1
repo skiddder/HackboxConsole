@@ -12,7 +12,8 @@ param(
     [ValidateRange(12,64)]
     [int]$complexPasswordLength = 16,
     [switch]$complexPasswordAllowSpecialChars,
-    [switch]$disableTechleadUser
+    [switch]$disableTechleadUser,
+    [switch]$createCsvFiles
 
 )
 
@@ -102,3 +103,8 @@ for ($i = 1; $i -le $numberOfTenants; $i++) {
 
 
 $users | ConvertTo-Json -Depth 3 | Out-File -FilePath (Join-Path -Path $consoleRoot -ChildPath "users.json") -Encoding utf8
+
+if($createCsvFiles) {
+    $users  | Where-Object { $_.role -eq "hacker" } | Select-Object tenant,username,password | ConvertTo-Csv | Out-File -FilePath (Join-Path -Path $consoleRoot -ChildPath "users-hackers.csv") -Encoding utf8
+    $users  | Where-Object { $_.role -eq "coach" } | Select-Object tenant,username,password | ConvertTo-Csv | Out-File -FilePath (Join-Path -Path $consoleRoot -ChildPath "users-coaches.csv") -Encoding utf8
+}
