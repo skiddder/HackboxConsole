@@ -5,15 +5,53 @@ class TechleadManagement {
     #actionTimeout = null;
     #refreshTimeout = null;
     #techleadNode = null;
-    constructor(nodeId = "techlead-management") {
+    #techleadNodeApproveEveryTeam = null;
+    #techleadNodeRevertEveryTeam = null;
+    #techleadNodeResetEveryTeam = null;
+    constructor(nodeId = "techlead-management", approveEveryTeamId = "challenge-approve-every-team", revertEveryTeamId = "challenge-revert-every-team", resetEveryTeamId = "challenge-reset-every-team") {
         this.#techleadNode = document.getElementById(nodeId);
         // is it an html node?
         if(!(this.#techleadNode instanceof HTMLElement)) {
             throw "TechleadManagement: Node not found";
         }
+        this.#techleadNodeApproveEveryTeam = document.getElementById(approveEveryTeamId);
+        if(this.#techleadNodeApproveEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeApproveEveryTeam.addEventListener('click', this.approveEveryTeam.bind(this));
+        }
+        this.#techleadNodeRevertEveryTeam = document.getElementById(revertEveryTeamId);
+        if(this.#techleadNodeRevertEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeRevertEveryTeam.addEventListener('click', this.revertEveryTeam.bind(this));
+        }
+        this.#techleadNodeResetEveryTeam = document.getElementById(resetEveryTeamId);
+        if(this.#techleadNodeResetEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeResetEveryTeam.addEventListener('click', this.resetEveryTeam.bind(this));
+        }
 
         this.refresh();
         setInterval(this.renderTimerCells.bind(this), 1000);
+    }
+
+    approveEveryTeam() {
+        console.log("Approve Every Team");
+        this.#queueActionForAllTenants('challenge-approve');
+    }
+    revertEveryTeam() {
+        console.log("Revert Every Team");
+        this.#queueActionForAllTenants('challenge-revert');
+    }
+    resetEveryTeam() {
+        console.log("Reset Every Team");
+        this.#queueActionForAllTenants('challenge-reset');
+    }
+
+    #queueActionForAllTenants(action) {
+        if(!this.#tenantSettings || Object.keys(this.#tenantSettings).length === 0) {
+            console.warn("No tenant settings available to queue action for all tenants");
+            return;
+        }
+        for(const tenantId of Object.keys(this.#tenantSettings)) {
+            this.#queueAction(tenantId, action);
+        }
     }
 
     async getTenantsSettings() {
