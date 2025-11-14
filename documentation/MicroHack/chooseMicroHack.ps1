@@ -127,7 +127,7 @@ function rewriteMdFile {
     $content = (Get-Content -Path $FilePath -Raw).Trim() -split "`n"
 
     # cleaning up the title
-    $content[0] = $content[0] -replace "^#(\s+(Optional|Extra|Challenge|Walkthrough|Solution))+\s+\d+(\s*[:-])?", "# "
+    $content[0] = $content[0] -replace "^#(\s+(Optional|Extra|Challenge|Walkthrough|Solution):?)+\s+\d+(\s*[:-])?", "# "
     $content[0] = $content[0] -replace "^#\s+", "# "
 
     # navigation bars
