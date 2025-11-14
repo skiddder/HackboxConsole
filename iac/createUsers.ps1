@@ -1,3 +1,69 @@
+<#
+.SYNOPSIS
+Creates user accounts for Contoso Hotel OpenHack hackathon events with configurable roles and password complexity.
+
+.DESCRIPTION
+This script generates user accounts for hackathon participants including hackers, coaches, and an optional techlead.
+It supports flexible password generation with simple (human-readable) or complex password options.
+Output is saved as JSON and optionally as CSV files for easy distribution and import.
+
+.PARAMETER numberOfTenants
+The number of tenant teams to create. Each tenant gets one hacker and one coach account.
+Valid range: 1-200
+Default: 4
+
+.PARAMETER baseHackerUsername
+The base username for hacker accounts. Will be suffixed with padded team numbers (e.g., hacker01, hacker02).
+
+.PARAMETER baseCoachUsername
+The base username for coach accounts. Will be suffixed with padded team numbers (e.g., coach01, coach02).
+
+.PARAMETER hackerPasswordStrength
+Password complexity for hacker accounts.
+Valid values:
+- Simple: Uses adjective-noun-number format (e.g., "big-apple-42")
+- Complex: Uses random alphanumeric characters
+
+.PARAMETER coachPasswordStrength
+Password complexity for coach accounts.
+Valid values:
+- Simple: Uses adjective-noun-number format (e.g., "big-apple-42")
+- Complex: Uses random alphanumeric characters
+.PARAMETER simplePasswordAdjectives
+Custom array of adjectives for simple password generation.
+If not provided, uses default fruit-related adjectives.
+Example: @('red','blue','green','fast','slow')
+
+.PARAMETER simplePasswordNouns
+Custom array of nouns for simple password generation.
+If not provided, uses default fruit names.
+Example: @('car','house','tree','book','pen')
+
+.PARAMETER complexPasswordLength
+Length of complex passwords in characters.
+
+.PARAMETER complexPasswordAllowSpecialChars
+Include special characters in complex passwords for additional security.
+
+.PARAMETER disableTechleadUser
+Disable creation of the techlead user account.
+
+.PARAMETER createCsvFiles
+Generate separate CSV files for hackers and coaches in addition to the main JSON file. (Useful to put passwords f.e. into Excel or PowerPoint for distribution)
+
+.EXAMPLE
+.\createUsers.ps1 -numberOfTenants 25 -createCsvFiles -complexPasswordAllowSpecialChars
+Creates 25 tenant teams, generates CSV files, and uses special characters in complex passwords.
+
+.EXAMPLE
+.\createUsers.ps1 -numberOfTenants 5 -simplePasswordAdjectives @('red','blue','green') -simplePasswordNouns @('car','bike','bus')
+Creates 5 tenant teams using custom words for simple password generation for the hacker users.
+Example passwords: "red-car-23", "blue-bike-87"
+
+.EXAMPLE
+.\createUsers.ps1 -numberOfTenants 10 -disableTechleadUser -baseHackerUsername "student" -baseCoachUsername "mentor"
+Creates 10 tenant teams without techlead, using custom base usernames like "student01", "mentor01".
+#>
 param(
     [ValidateRange(1,200)]
     [int]$numberOfTenants=4,
@@ -107,4 +173,8 @@ $users | ConvertTo-Json -Depth 3 | Out-File -FilePath (Join-Path -Path $consoleR
 if($createCsvFiles) {
     $users  | Where-Object { $_.role -eq "hacker" } | Select-Object tenant,username,password | ConvertTo-Csv | Out-File -FilePath (Join-Path -Path $consoleRoot -ChildPath "users-hackers.csv") -Encoding utf8
     $users  | Where-Object { $_.role -eq "coach" } | Select-Object tenant,username,password | ConvertTo-Csv | Out-File -FilePath (Join-Path -Path $consoleRoot -ChildPath "users-coaches.csv") -Encoding utf8
+    Write-Host "CSV files for hackers and coaches have been created."
+    Write-Host "The CSV files are located at:"
+    Write-Host (" - " + (Join-Path -Path $consoleRoot -ChildPath "users-hackers.csv"))
+    Write-Host (" - " + (Join-Path -Path $consoleRoot -ChildPath "users-coaches.csv"))
 }
