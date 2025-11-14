@@ -8,12 +8,24 @@ class TechleadManagement {
     #techleadNodeApproveEveryTeam = null;
     #techleadNodeRevertEveryTeam = null;
     #techleadNodeResetEveryTeam = null;
-    constructor(nodeId = "techlead-management", approveEveryTeamId = "challenge-approve-every-team", revertEveryTeamId = "challenge-revert-every-team", resetEveryTeamId = "challenge-reset-every-team") {
+    #techleadNodeTimerStartEveryTeam = null;
+    #techleadNodeTimerStopEveryTeam = null;
+    #techleadNodeTimerResetEveryTeam = null;
+    constructor(
+        nodeId = "techlead-management",
+        approveEveryTeamId = "challenge-approve-every-team",
+        revertEveryTeamId = "challenge-revert-every-team",
+        resetEveryTeamId = "challenge-reset-every-team",
+        timerStartEveryTeamId = "timer-start-every-team",
+        timerStopEveryTeamId = "timer-stop-every-team",
+        timerResetEveryTeamId = "timer-reset-every-team"
+    ) {
         this.#techleadNode = document.getElementById(nodeId);
         // is it an html node?
         if(!(this.#techleadNode instanceof HTMLElement)) {
             throw "TechleadManagement: Node not found";
         }
+        // challenge buttons
         this.#techleadNodeApproveEveryTeam = document.getElementById(approveEveryTeamId);
         if(this.#techleadNodeApproveEveryTeam instanceof HTMLElement) {
             this.#techleadNodeApproveEveryTeam.addEventListener('click', this.approveEveryTeam.bind(this));
@@ -25,6 +37,19 @@ class TechleadManagement {
         this.#techleadNodeResetEveryTeam = document.getElementById(resetEveryTeamId);
         if(this.#techleadNodeResetEveryTeam instanceof HTMLElement) {
             this.#techleadNodeResetEveryTeam.addEventListener('click', this.resetEveryTeam.bind(this));
+        }
+        // timer buttons
+        this.#techleadNodeTimerStartEveryTeam = document.getElementById(timerStartEveryTeamId);
+        if(this.#techleadNodeTimerStartEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeTimerStartEveryTeam.addEventListener('click', this.timerStartEveryTeam.bind(this));
+        }
+        this.#techleadNodeTimerStopEveryTeam = document.getElementById(timerStopEveryTeamId);
+        if(this.#techleadNodeTimerStopEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeTimerStopEveryTeam.addEventListener('click', this.timerStopEveryTeam.bind(this));
+        }
+        this.#techleadNodeTimerResetEveryTeam = document.getElementById(timerResetEveryTeamId);
+        if(this.#techleadNodeTimerResetEveryTeam instanceof HTMLElement) {
+            this.#techleadNodeTimerResetEveryTeam.addEventListener('click', this.timerResetEveryTeam.bind(this));
         }
 
         this.refresh();
@@ -42,6 +67,18 @@ class TechleadManagement {
     resetEveryTeam() {
         console.log("Reset Every Team");
         this.#queueActionForAllTenants('challenge-reset');
+    }
+    timerStartEveryTeam() {
+        console.log("Timer Start Every Team");
+        this.#queueActionForAllTenants('timer-start');
+    }
+    timerStopEveryTeam() {
+        console.log("Timer Stop Every Team");
+        this.#queueActionForAllTenants('timer-stop');
+    }
+    timerResetEveryTeam() {
+        console.log("Timer Reset Every Team");
+        this.#queueActionForAllTenants('timer-reset');
     }
 
     #queueActionForAllTenants(action) {

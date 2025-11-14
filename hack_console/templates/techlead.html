@@ -9,13 +9,26 @@ HackBox Console - Techlead Management
 {% block content %}
 <h1 class="page-title">Techlead Management</h1>
 
-<div class="toolbar-group">
-	<a href="#" class="pill-btn success" data-action="challenge-approve-every-team" id="challenge-approve-every-team">Approve (every team)</a>
-	<a href="#" class="pill-btn warn" data-action="challenge-revert-every-team" id="challenge-revert-every-team">Revert (every team)</a>
-	<a href="#" class="pill-btn danger" data-action="challenge-reset-every-team" id="challenge-reset-every-team">Reset (every team)</a>
+<div class="card">
+	<h2>Challenge Controls (Across all teams)</h2>
+	<div class="toolbar-group">
+		<a href="#" class="pill-btn success" data-action="challenge-approve-every-team" id="challenge-approve-every-team">Approve (every team)</a>
+		<a href="#" class="pill-btn warn" data-action="challenge-revert-every-team" id="challenge-revert-every-team">Revert (every team)</a>
+		<a href="#" class="pill-btn danger" data-action="challenge-reset-every-team" id="challenge-reset-every-team">Reset (every team)</a>
+	</div>
 </div>
-
 <br /><br />
+
+<div class="card">
+	<h2>Timer Controls (Across all teams)</h2>
+	<div class="toolbar-group">
+		<a href="#" class="pill-btn success" data-action="timer-start-every-team" id="timer-start-every-team">Timer Start (every team)</a>
+		<a href="#" class="pill-btn warn" data-action="timer-stop-every-team" id="timer-stop-every-team">Timer Stop (every team)</a>
+		<a href="#" class="pill-btn danger" data-action="timer-reset-every-team" id="timer-reset-every-team">Timer Reset (every team)</a>
+	</div>
+</div>
+<br /><br />
+
 
 <div id="techlead-management">Loading...
 </div>
