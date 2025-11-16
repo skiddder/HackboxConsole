@@ -71,7 +71,9 @@ def create_all_users():
 all_users = create_all_users()
 all_tenants = set()
 for user in all_users.values():
-    all_tenants.add(user.tenant)
+    # a tenant is only relevant for hackers and coaches (not for techleads)
+    if user.role in ["hacker", "coach"]:
+        all_tenants.add(user.tenant)
 all_tenants = list(all_tenants)
 
 @login_manager.user_loader
