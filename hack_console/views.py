@@ -95,6 +95,33 @@ class HackBoxSettings:
         if self._tenantName == "":
             self._tenantName = "Default"
     
+    def getAllDefaultTenantSettings(self) -> Dict[str, Union[str, int, bool]]:
+        entities = self.getAllTenantSettings("Default")
+        for tenant in entities:
+            if "Stopwatch" in entities[tenant]:
+                entities[tenant]["Stopwatch"] = self._validateStopwatch(entities[tenant]["Stopwatch"])
+            else:
+                entities[tenant]["Stopwatch"] = self._validateStopwatch(None)
+            if "CurrentStep" in entities[tenant]:
+                entities[tenant]["CurrentStep"] = self._validateStep(entities[tenant]["CurrentStep"])
+            else:
+                entities[tenant]["CurrentStep"] = self._validateStep(None)
+        return entities
+    def getAllTenantSettings(self, group : str = "Default") -> Dict[str, Dict[str, Union[str, int, bool]]]:
+        group = self.sanitizeGroup(group)
+        entities = {}
+        for tenant in all_tenants:
+            entities[tenant] = {
+            }
+        for entity in self._tc.query_entities(query_filter=f"group eq '{group}'"):
+            tenant = entity["PartitionKey"]
+            if tenant not in entities:
+                continue
+            del entity["PartitionKey"]
+            del entity["RowKey"]
+            entities[tenant][entity["key"]] = entity
+        return entities
+
     def sanitizeKey(self, key: str) -> str:
         return "".join([c for c in key if c.isalnum() or c == "_" or c == "-" or c == " "]).strip()
     
@@ -156,14 +183,15 @@ class HackBoxSettings:
     def setStep(self, step: int) -> None:    
         if step < 1 or step > len(challenges_mds) + 1:
             raise ValueError("Step cannot be less than 1")
-        self.set("CurrentStep", {"Step": step})   
-    def getStep(self) -> int:
-        step = self.get("CurrentStep")
+        self.set("CurrentStep", {"Step": step})
+    def _validateStep(self, step: Union[Dict[str, Union[str, int, bool]], None]) -> int:
         if step is None:
             return 1
         if "Step" not in step:
             return 1
         return step["Step"]
+    def getStep(self) -> int:
+        return self._validateStep(self.get("CurrentStep"))
 
     def setStopwatch(self, status : str, startTime : Union[datetime.datetime, str, None], secondsElapsed: int) -> None:
         if status not in ["running", "stopped"]:
@@ -186,8 +214,7 @@ class HackBoxSettings:
         self.set("Stopwatch", {"status": status, "startTime": startTime, "secondsElapsed": secondsElapsed})
         return self
 
-    def getStopwatch(self) -> Tuple[str, Union[datetime.datetime, None], int]:
-        ti = self.get("Stopwatch")
+    def _validateStopwatch(self, ti: Union[Dict[str, Union[str, int, bool]], None]) -> Tuple[str, Union[datetime.datetime, None], int]:
         status = "stopped"
         startTime = None
         secondsElapsed = 0
@@ -208,6 +235,8 @@ class HackBoxSettings:
                 except Exception:
                     startTime = None
         return status, startTime, secondsElapsed
+    def getStopwatch(self) -> Tuple[str, Union[datetime.datetime, None], int]:
+        return self._validateStopwatch(self.get("Stopwatch"))
 
     def set(self, key: str, value: Dict[str, Union[str, int, bool]], group : str = "Default") -> None:
         key = self.sanitizeKey(key)
@@ -479,16 +508,18 @@ def api_get_tenants_settings():
         return jsonify({"success": False, "error": "Unauthorized"}), 403
     try:
         tenants_settings = {}
-        for tenant in all_tenants:
-            hbSettings = HackBoxSettings(tenant)
-            status, startTime, secondsElapsed = hbSettings.getStopwatch()
-            if startTime is not None:
-                startTime = startTime.isoformat()
-            tenants_settings[tenant] = {
-                "CurrentStep": hbSettings.getStep(),
-                "Stopwatch": (status, startTime, secondsElapsed),
-                "MaxStep": len(challenges_mds) + 1
-            }
+        max_steps = len(challenges_mds) + 1
+        hbSettings = HackBoxSettings()
+        tenants_settings = hbSettings.getAllDefaultTenantSettings()
+        for tenant in tenants_settings:
+            tenants_settings[tenant]["MaxStep"] = max_steps
+            if "Stopwatch" in tenants_settings[tenant]:
+                if tenants_settings[tenant]["Stopwatch"][1] is not None:
+                    tenants_settings[tenant]["Stopwatch"] = (
+                        tenants_settings[tenant]["Stopwatch"][0],
+                        tenants_settings[tenant]["Stopwatch"][1].isoformat(),
+                        tenants_settings[tenant]["Stopwatch"][2]
+                    )
         return jsonify({"success": True, "tenants": tenants_settings})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
