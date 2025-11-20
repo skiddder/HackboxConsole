@@ -11,3 +11,6 @@ env
 /hack_console/solutions/**/*
 /users.json
 /iac/hack_console.zip
+/timings.csv
+/users-hackers.csv
+/users-coaches.csv
