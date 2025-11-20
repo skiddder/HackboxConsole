@@ -164,7 +164,8 @@ else {
             Write-Host "Removing existing $subdir from hack_console"
             Remove-Item (Join-Path $script:ConsoleRoot "hack_console" $subdir) -Recurse -Force | Out-Null
         }
-        New-Item -Path (Join-Path $script:ConsoleRoot "hack_console" $subdir) -ItemType Directory | Out-Null
+        New-Item -Path (Join-Path $script:ConsoleRoot "hack_console" $subdir) -ItemType Directory | Out-Null 
+        New-Item -Path (Join-Path $script:ConsoleRoot "hack_console" $subdir ".gitkeep") -ItemType File | Out-Null
     }
 
     Write-Host "Hack structure: $($chosenHack.HackStructure)"

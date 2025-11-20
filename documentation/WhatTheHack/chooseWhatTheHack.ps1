@@ -166,6 +166,7 @@ else {
             Remove-Item (Join-Path $script:ConsoleRoot "hack_console" $subdir) -Recurse -Force | Out-Null
         }
         New-Item -Path (Join-Path $script:ConsoleRoot "hack_console" $subdir) -ItemType Directory | Out-Null
+        New-Item -Path (Join-Path $script:ConsoleRoot "hack_console" $subdir ".gitkeep") -ItemType File | Out-Null
     }
 
     # Always copy HowToHack
