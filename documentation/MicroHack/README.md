@@ -11,6 +11,7 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
  - Azure Az Module
  - Git
  - Azure Subscription
+ - Bicep installed ( https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually )
  - This repository cloned (``git clone https://github.com/qxsch/HackboxConsole.git``)
 
 ## Execution Steps

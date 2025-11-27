@@ -32,7 +32,13 @@ Thanks to [zero-md](https://github.com/zerodevx/zero-md) the markdown files are 
 - [x] Light and dark themes
 - [x] Spec-compliant extensibility
 
-
+## Prerequisites
+ - Powershell 7+
+ - Azure Az Module
+ - Git
+ - Azure Subscription
+ - Bicep installed ( https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually )
+ - This repository cloned (``git clone https://github.com/qxsch/HackboxConsole.git``)
 
 ## How to build & Deploy
 

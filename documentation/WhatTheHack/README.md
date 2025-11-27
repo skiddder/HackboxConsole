@@ -10,6 +10,7 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
  - Azure Az Module
  - Git
  - Azure Subscription
+ - Bicep installed ( https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually )
  - This repository cloned (``git clone https://github.com/qxsch/HackboxConsole.git``)
 
 
