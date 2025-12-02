@@ -44,7 +44,7 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
    1. Publish credentials
       ```pwsh
       # for csv with required columns: name, value   (optional columns: group, tenant)
-      Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 -storageAccountName remsa001 -storageAccountName "storage...."
+      Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1
       # for json array of objects with required attributes: name, value   (optional attributes: group, tenant)
-      Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -storageAccountName remsa001 -storageAccountName "storage...." 
+      Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1
       ```
