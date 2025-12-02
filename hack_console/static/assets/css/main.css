@@ -282,6 +282,18 @@ table.generic td.credential:not(.hidden), .credentials td.credential:not(.hidden
   }
 }
 
+div.credentialtooltip {
+  position:absolute;
+  transform:translateX(-50%) translateY(-8px);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:15px 15px;
+  border-radius:var(--radius-sm);
+  font-size:.75rem;
+  white-space:nowrap;
+}
+
+
 /* Animations */
 .fade-in { animation: fadeIn .6s ease; }
 .pop { animation: popIn .7s ease 80ms backwards; }

@@ -42,12 +42,12 @@
             td2.classList.add('hidden');
             td2.classList.add('credential');
             td2.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
-            td2.title = 'Click to reveal credential.';
+            td2.title = 'Double click to copy credential.';
             if(cred.note) {
                 const noteStr = String(cred.note).trim();
                 td2.title += " (Note: " + noteStr + ")";
             }
-            td2.addEventListener('click', function() {
+            td2.addEventListener('click', function(event) {
                 this.classList.toggle('hidden');
                 if (this.classList.contains('hidden')) {
                     this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
@@ -55,6 +55,37 @@
                 else {
                     this.innerText = this.dataset.Credential;
                 }
+            });
+            // double click to copy
+            td2.addEventListener('dblclick', function(event) {
+                navigator.clipboard.writeText(this.dataset.Credential);
+                // add fading tooltip
+                const tooltip = document.createElement('div');
+                tooltip.classList.add('credentialtooltip');
+                tooltip.innerText = '📑 Copied!';
+                document.body.appendChild(tooltip);
+
+                // add to mouse position
+                tooltip.style.position = 'absolute';
+                tooltip.style.left = (event.pageX + 10) + 'px';
+                tooltip.style.top = (event.pageY + 10) + 'px';
+                // and ensure it is not off screen
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if(tooltipRect.right > window.innerWidth) {
+                    tooltip.style.left = (window.innerWidth - tooltipRect.width - 10) + 'px';
+                }
+                if(tooltipRect.bottom > window.innerHeight) {
+                    tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
+                }
+
+                setTimeout(() => {
+                    tooltip.remove();
+                    // hide credential
+                    if(!this.classList.contains('hidden')) {
+                        this.classList.add('hidden');
+                        this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
+                    }
+                }, 1200);
             });
             tr.appendChild(td2);
 
