@@ -36,8 +36,7 @@ Creates an inline credential object and submits it directly through the pipeline
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$storageAccountName,
+    [string]$storageAccountName = "",
     [string]$ResourceGroupName = "HackConsole",
     [string]$ip = "",
     [switch]$skipFirewallRule,
@@ -46,6 +45,15 @@ param(
 )
 
 begin {
+    if([string]::IsNullOrWhiteSpace($storageAccountName)) {
+        Write-Host "Storage account name not provided. Attempting to retrieve from resource group."
+        $storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName | Where-Object { $_.Kind -eq 'StorageV2' -and $_.StorageAccountName.StartsWith('storage') } | Select-Object -First 1
+        if($null -eq $storageAccount) {
+            throw "No suitable storage account found in resource group '$ResourceGroupName'. Please provide the storage account name explicitly."
+        }
+        $storageAccountName = $storageAccount.StorageAccountName
+    }
+
     $script:firewallAdded = $false
     if(-not $skipFirewallRule) {
         # add the client ip to the storage account firewall
