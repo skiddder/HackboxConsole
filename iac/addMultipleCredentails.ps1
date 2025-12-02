@@ -83,7 +83,11 @@ process {
         $group = (($group.ToCharArray() | Where-Object { $_ -match '[a-zA-Z0-9_-]' }) -join '').Trim()
         if ($group -eq '') { $group = 'Default' }
         $tenant = if ($InputObject.PSObject.Properties.Match('tenant')) { $InputObject.tenant } else { 'Default' }
-
+        $note = if ($InputObject.PSObject.Properties.Match('note')) { $InputObject.note } else { '' }
+        if($note.Length -gt 160) {
+            Write-Warning "Note length exceeds 160 characters. Truncating."
+            $note = $note.Substring(0, 160)
+        }
         if ([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($value)) {
             Write-Warning "Input object must have non-empty 'name' and 'value' properties. Skipping this entry."
             return
@@ -91,9 +95,10 @@ process {
 
         # group validation
         $entity = New-Object -TypeName Microsoft.Azure.Cosmos.Table.DynamicTableEntity -ArgumentList $tenant, "$group|$name"
-        $entity.Properties.Add('group', $group)
-        $entity.Properties.Add('name', $name)
-        $entity.Properties.Add('Credential', $value)
+        $entity.Properties.Add('group', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($group))
+        $entity.Properties.Add('name', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($name))
+        $entity.Properties.Add('Credential', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($value))
+        $entity.Properties.Add('note', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($note))
         $tableOperation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrReplace($entity)
         $status = $script:table.CloudTable.Execute($tableOperation)
         if($status.HttpStatusCode -ge 200 -and $status.HttpStatusCode -lt 300) {

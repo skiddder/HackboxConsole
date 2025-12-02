@@ -7,12 +7,18 @@ param(
     [string]$value,
     [string]$group='Default',
     [string]$tenant='Default',
+    [string]$note = "",
     [string]$ResourceGroupName = "HackConsole",
     [string]$ip = ""
 )
 
 # group validation
 $group = (($group.ToCharArray() | Where-Object { $_ -match '[a-zA-Z0-9_-]' }) -join '').Trim()
+# note validation
+if($note.Length -gt 160) {
+    Write-Warning "Note length exceeds 160 characters. Truncating."
+    $note = $note.Substring(0, 160)
+}
 
 # add the client ip to the storage account firewall
 if($ip -eq "") {
@@ -25,15 +31,16 @@ Write-Host "Waiting for 10 seconds for the firewall rule to take effect"
 Start-Sleep -Seconds 10
 
 Write-Host "Adding credential to the storage account table"
-#add an entry to the storage account table
+# add an entry to the storage account table
 $storageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $storageAccountName).Value[0]
 $context = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageAccountKey
 $table = Get-AzStorageTable -Name 'credentials' -Context $context
 
 $entity = New-Object -TypeName Microsoft.Azure.Cosmos.Table.DynamicTableEntity -ArgumentList $tenant, "$group|$name"
-$entity.Properties.Add('group', $group)
-$entity.Properties.Add('name', $name)
-$entity.Properties.Add('Credential', $value)
+$entity.Properties.Add('group', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($group))
+$entity.Properties.Add('name', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($name))
+$entity.Properties.Add('Credential', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($value))
+$entity.Properties.Add('note', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($note))
 $tableOperation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrReplace($entity)
 $table.CloudTable.Execute($tableOperation)
 
