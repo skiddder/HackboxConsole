@@ -44,7 +44,7 @@
             td2.classList.add('hidden');
             td2.classList.add('credential');
             td2.innerText = '••••••••';
-            td2.title = 'Click to reveal credential for "' + cred.name + '"';
+            td2.title = 'Click to reveal credential.';
             if(cred.note) {
                 const noteStr = String(cred.note).trim();
                 td2.title += " (Note: " + noteStr + ")";
