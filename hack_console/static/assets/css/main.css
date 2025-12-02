@@ -213,7 +213,7 @@ body {
 }
 table.generic, .credentials table {
   width:100%;
-  max-width:600px;
+  max-width:1600px;
   border-collapse:separate;
   border-spacing:0;
   background:var(--color-surface);

@@ -2,7 +2,6 @@
 // one off loader
 (async function() {
     var creds = await fetch('/api/show/credentials').then(response => response.json());
-    console.log(creds);
     const rootEl = document.getElementById('credentials');
     rootEl.innerHTML = '';
 
@@ -14,7 +13,6 @@
         }
         newDict[g].push(creds[i]);
     }
-    console.log(newDict);
 
     // iterate over dict
     for (var key in newDict) {
@@ -43,7 +41,7 @@
             td2.dataset.Credential = cred.Credential;
             td2.classList.add('hidden');
             td2.classList.add('credential');
-            td2.innerText = '••••••••';
+            td2.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
             td2.title = 'Click to reveal credential.';
             if(cred.note) {
                 const noteStr = String(cred.note).trim();
@@ -52,7 +50,7 @@
             td2.addEventListener('click', function() {
                 this.classList.toggle('hidden');
                 if (this.classList.contains('hidden')) {
-                    this.innerText = '••••••••';
+                    this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
                 }
                 else {
                     this.innerText = this.dataset.Credential;
