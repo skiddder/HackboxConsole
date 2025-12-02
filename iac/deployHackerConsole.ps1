@@ -21,6 +21,11 @@ param (
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $consoleRoot = Split-Path -Parent $scriptPath
 
+# Install required PowerShell modules
+if(-not (Get-Command bicep.exe -ErrorAction SilentlyContinue)) {
+    Write-Error "Bicep CLI not found. Go to: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-powershell"
+    throw "Bicep CLI not found. Please install Bicep CLI and make sure it is in your PATH."
+}
 
 # does the file exist?
 if(-not (Test-Path (Join-Path $consoleRoot "users.json") -PathType Leaf)) {
