@@ -110,7 +110,10 @@ class ChallengeManager {
             document.getElementById("zeromd").shadowRoot.querySelectorAll('secret').forEach(async function(secretElem) {
                 let group = secretElem.getAttribute("group") ? secretElem.getAttribute("group") : "Default";
                 let name = secretElem.getAttribute("name");
-                let show = secretElem.getAttribute("show") ? secretElem.getAttribute("show").toLowerCase() == "true" : false;
+                let show = secretElem.getAttribute("show") ? secretElem.getAttribute("show").toLowerCase() : "false";
+                if(show !== "true" && show !== "false" && show !== "alwayshidden") {
+                    show = "false";
+                }
 
                 let secret = await that.#getSecret(group, name);
                 let secretValue = secret ? String(secret.Credential) : "undefined";
@@ -120,7 +123,7 @@ class ChallengeManager {
                 let span = document.createElement("span");
                 span.classList.add("secret");
                 span.title = 'Double click to copy credential.';
-                if(show) {
+                if(show === "true") {
                     span.innerText = '📑 ' + secretValue;
                 }
                 else {
@@ -128,16 +131,18 @@ class ChallengeManager {
                     span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
                 }
                 secretElem.parentElement.replaceChild(span, secretElem);
-                span.addEventListener('click', function(event) {
-                    if(this.classList.contains('hidden')) {
-                        this.classList.remove('hidden');
-                        this.innerText = '📑 ' + secretValue;
-                    }
-                    else {
-                        this.classList.add('hidden');
-                        this.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
-                    } 
-                });
+                if(show !== "alwayshidden") {
+                    span.addEventListener('click', function(event) {
+                        if(this.classList.contains('hidden')) {
+                            this.classList.remove('hidden');
+                            this.innerText = '📑 ' + secretValue;
+                        }
+                        else {
+                            this.classList.add('hidden');
+                            this.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                        } 
+                    });
+                }
                 span.addEventListener('dblclick', function(event) {
                     if(tooltipTimeout) {
                         clearTimeout(tooltipTimeout);
@@ -170,7 +175,7 @@ class ChallengeManager {
                     tooltipTimeout = setTimeout(() => {
                         tooltip.remove();
                         // set credential to initial state
-                        if(show) {
+                        if(show === "true") {
                             if(span.classList.contains('hidden')) {
                                 span.classList.remove('hidden');
                             }
