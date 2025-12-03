@@ -56,11 +56,21 @@
                     this.innerText = this.dataset.Credential;
                 }
             });
+            var tooltip=null;
+            var tooltipTimeout=null;
             // double click to copy
             td2.addEventListener('dblclick', function(event) {
+                if(tooltipTimeout) {
+                    clearTimeout(tooltipTimeout);
+                    tooltipTimeout = null;
+                }
+                if(tooltip) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
                 navigator.clipboard.writeText(this.dataset.Credential);
                 // add fading tooltip
-                const tooltip = document.createElement('div');
+                tooltip = document.createElement('div');
                 tooltip.classList.add('credentialtooltip');
                 tooltip.innerText = '📑 Copied!';
                 document.body.appendChild(tooltip);
@@ -77,14 +87,15 @@
                 if(tooltipRect.bottom > window.innerHeight) {
                     tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
                 }
-
-                setTimeout(() => {
+                tooltipTimeout = setTimeout(() => {
                     tooltip.remove();
                     // hide credential
                     if(!this.classList.contains('hidden')) {
                         this.classList.add('hidden');
                         this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
                     }
+                    tooltip = null;
+                    tooltipTimeout = null;
                 }, 1200);
             });
             tr.appendChild(td2);
