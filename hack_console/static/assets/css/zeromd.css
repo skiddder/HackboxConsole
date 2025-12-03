@@ -1,7 +1,8 @@
-
 @import url('https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css');
 @import url('https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/github.min.css');
 @import url('https://cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css');
+
+
 
 /* enforce light mode */
 @media (prefers-color-scheme:dark) {
@@ -57,6 +58,34 @@
         --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
         --color-prettylights-syntax-markup-ignored-bg: #0550ae;
         --color-prettylights-syntax-meta-diff-range: #8250df;
-        --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98
+        --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
     }
+}
+
+
+span.secret {
+    padding: 2px 12px 2px 8px;
+    cursor: pointer;
+    user-select: none;
+    background: linear-gradient(135deg, rgba(255, 126, 179, 0.40), rgba(255, 117, 140, 0.40) 35%, rgba(255, 154, 68, 0.40) 70%, rgba(255, 212, 82, 0.40));
+    color: #1f2328;
+    border: 1px solid transparent #ff9a44;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    border-radius: 12px;
+}
+span.secret:hover {
+    background: linear-gradient(135deg, rgba(255, 212, 82, 0.75), rgba(255, 154, 68, 0.75) 35%, rgba(255, 117, 140, 0.8) 70%, rgba(176, 124, 255, 0.8));
+    transform: translateY(-2px);
+    filter: saturate(1.1);
+}
+
+div.credentialtooltip {
+  position:absolute;
+  transform:translateX(-50%) translateY(-8px);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:15px 15px;
+  border-radius:var(--radius-sm);
+  font-size:.75rem;
+  white-space:nowrap;
 }

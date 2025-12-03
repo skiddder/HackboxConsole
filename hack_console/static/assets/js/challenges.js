@@ -5,6 +5,8 @@ class ChallengeManager {
     #refreshSeconds = 0;
     #refreshTimeout = null;
     #isSubSite = false;
+    #cachedSecrets = null;
+    #chachedSecretsRefreshing = false;
     constructor() {
         document.getElementById("navToPreviousChallenge").style.display = "none";
         document.getElementById("navToPreviousChallenge").addEventListener("click", this.navToPreviousChallenge.bind(this));
@@ -40,11 +42,40 @@ class ChallengeManager {
         }
     }
 
+    async #getSecret(group, name) {
+        group = String(group).toLowerCase();
+        name = String(name).toLowerCase();
+        // wait until refresh is done
+        while(this.#chachedSecretsRefreshing) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        if(this.#cachedSecrets === null) {
+            try {
+                this.#chachedSecretsRefreshing = true;
+                const secrets = await fetch('/api/show/credentials').then(response => response.json());
+                let d = {};
+                for (var i in secrets) {
+                    var g = secrets[i].group.toLowerCase();
+                    var n = secrets[i].name.toLowerCase();
+                    d[`${g}|${n}`] = secrets[i];
+                }
+                this.#cachedSecrets = d;
+            } finally {
+                this.#chachedSecretsRefreshing = false;
+            }
+        }
+        return this.#cachedSecrets[`${group}|${name}`];
+    }
+
     #setZeroMdListener() {
         var that = this;
         var currentUrl = new URL(window.location.href);
         console.log("Current URL", currentUrl);
         document.getElementById("zeromd").addEventListener('zero-md-rendered', function() {
+            // tooltip variables
+            var tooltip=null;
+            var tooltipTimeout=null;
+
             var mdBase = document.getElementById("zeromd").src.substring(0, document.getElementById("zeromd").src.lastIndexOf("/") + 1);
             console.log("configuring markdown links");
             var nodes = document.getElementById("zeromd").shadowRoot.querySelectorAll('a[href]');
@@ -74,6 +105,87 @@ class ChallengeManager {
                         }
                     }
                 }
+            });
+            console.log("configuring secrets");
+            document.getElementById("zeromd").shadowRoot.querySelectorAll('secret').forEach(async function(secretElem) {
+                let group = secretElem.getAttribute("group") ? secretElem.getAttribute("group") : "Default";
+                let name = secretElem.getAttribute("name");
+                let show = secretElem.getAttribute("show") ? secretElem.getAttribute("show").toLowerCase() == "true" : false;
+
+                let secret = await that.#getSecret(group, name);
+                let secretValue = secret ? String(secret.Credential) : "undefined";
+
+
+                // replace secret element with span
+                let span = document.createElement("span");
+                span.classList.add("secret");
+                span.title = 'Double click to copy credential.';
+                if(show) {
+                    span.innerText = '📑 ' + secretValue;
+                }
+                else {
+                    span.classList.add('hidden');
+                    span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                }
+                secretElem.parentElement.replaceChild(span, secretElem);
+                span.addEventListener('click', function(event) {
+                    if(this.classList.contains('hidden')) {
+                        this.classList.remove('hidden');
+                        this.innerText = '📑 ' + secretValue;
+                    }
+                    else {
+                        this.classList.add('hidden');
+                        this.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                    } 
+                });
+                span.addEventListener('dblclick', function(event) {
+                    if(tooltipTimeout) {
+                        clearTimeout(tooltipTimeout);
+                        tooltipTimeout = null;
+                    }
+                    if(tooltip) {
+                        tooltip.remove();
+                        tooltip = null;
+                    }
+                    navigator.clipboard.writeText(secretValue);
+
+                    // add fading tooltip
+                    tooltip = document.createElement('div');
+                    tooltip.classList.add('credentialtooltip');
+                    tooltip.innerText = '📑 Copied!';
+                    document.body.appendChild(tooltip);
+
+                    // add to mouse position
+                    tooltip.style.position = 'absolute';
+                    tooltip.style.left = (event.pageX + 10) + 'px';
+                    tooltip.style.top = (event.pageY + 10) + 'px';
+                    // and ensure it is not off screen
+                    const tooltipRect = tooltip.getBoundingClientRect();
+                    if(tooltipRect.right > window.innerWidth) {
+                        tooltip.style.left = (window.innerWidth - tooltipRect.width - 10) + 'px';
+                    }
+                    if(tooltipRect.bottom > window.innerHeight) {
+                        tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
+                    }
+                    tooltipTimeout = setTimeout(() => {
+                        tooltip.remove();
+                        // set credential to initial state
+                        if(show) {
+                            if(span.classList.contains('hidden')) {
+                                span.classList.remove('hidden');
+                            }
+                            span.innerText = '📑 ' + secretValue;
+                        }
+                        else {
+                            if(!span.classList.contains('hidden')) {
+                                span.classList.add('hidden');
+                            }
+                            span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                        }
+                        tooltip = null;
+                        tooltipTimeout = null;
+                    }, 1200);
+                });
             });
 
         });

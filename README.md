@@ -31,6 +31,7 @@ Thanks to [zero-md](https://github.com/zerodevx/zero-md) the markdown files are 
 - [x] Auto re-render on input changes
 - [x] Light and dark themes
 - [x] Spec-compliant extensibility
+- [x] Renders secrets ``<secret group="groupname" name="secretname" show="true|false" />``
 
 ## Prerequisites
  - Powershell 7+
