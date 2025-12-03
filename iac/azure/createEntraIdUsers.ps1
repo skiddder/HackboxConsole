@@ -1,3 +1,47 @@
+<#
+.SYNOPSIS
+Creates Entra ID users and Temporary Access Passes for hackathon tenants.
+
+.DESCRIPTION
+Connects to Microsoft Graph, validates the hackathon timeframe and group inputs, then creates users,
+adds them to the specified groups, configures authentication data, and exports the resulting credentials.
+Best practice: always pass an explicit -hackathonStartDate that matches the real event kickoff so TAP validity aligns with the schedule.
+
+.PARAMETER startUserIndex
+Numeric index used to build sequential user principal names (default 1).
+
+.PARAMETER userNamePrefix
+Prefix applied to generated user aliases and UPNs (default "hackuser").
+
+.PARAMETER hackathonStartDate
+UTC datetime that marks when generated TAPs become valid; defaults to the current time.
+
+.PARAMETER hackathonEndDate
+UTC datetime for TAP expiration when not provided; automatically set to five days after start.
+
+.PARAMETER additionalGroupnames
+Optional collection of Entra ID group display names each created user should join.
+
+.PARAMETER csvPath
+Optional path used to export created user records as CSV for later reference.
+
+.EXAMPLE
+.\createEntraIdUsers.ps1 -hackathonStartDate (Get-Date "08:00:00").AddDays(7) -startUserIndex 5 -userNamePrefix "team" -additionalGroupnames "NoMfaEnforcement"
+Generates users team-005, team-006, … and enrolls each in the NoMfaEnforcement group while relying on default TAP dates.
+
+.EXAMPLE
+.\createEntraIdUsers.ps1 -hackathonStartDate (Get-Date "08:00:00").AddDays(7) -hackathonEndDate (Get-Date "16:00:00").AddDays(8)
+Explicitly pins the TAP window to the real event timeline. This is the recommended best practice for predictable onboarding.
+
+.EXAMPLE
+.\createEntraIdUsers.ps1 -hackathonStartDate (Get-Date "2024-12-10T07:30:00Z") -csvPath ".\hackUsers.csv"
+Uses the recommended explicit start date while capturing all generated credentials to CSV for downstream distribution.
+
+.NOTES
+Requires Microsoft Graph PowerShell modules Users, Groups, and Identity.SignIns plus delegated permissions:
+User.ReadWrite.All, Group.ReadWrite.All, UserAuthenticationMethod.ReadWrite.All.
+Always set -hackathonStartDate to the actual beginning of the hackathon to ensure TAPs cover the correct access window.
+#>
 param (
     [ValidateRange(1, 999)]
     [int]$startUserIndex = 1,
