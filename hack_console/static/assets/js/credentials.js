@@ -1,6 +1,10 @@
 
 // one off loader
 (async function() {
+    // tooltip variables
+    var tooltip=null;
+    var tooltipTimeout=null;
+
     var creds = await fetch('/api/show/credentials').then(response => response.json());
     const rootEl = document.getElementById('credentials');
     rootEl.innerHTML = '';
@@ -56,8 +60,6 @@
                     this.innerText = this.dataset.Credential;
                 }
             });
-            var tooltip=null;
-            var tooltipTimeout=null;
             // double click to copy
             td2.addEventListener('dblclick', function(event) {
                 if(tooltipTimeout) {
