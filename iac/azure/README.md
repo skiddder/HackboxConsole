@@ -24,7 +24,7 @@ Organize your tenant's subscriptions using `renameAndOrganizeSubscriptions.ps1`
 
 
 ### Weeks before the hackathon: Capacity & Quota Planning
-Fill out the [quota-requests-sample.csv](quota-requests-sample.csv) file with your expected resource usage for the hackathon for each subscription.
+Fill out the [quota-requests-sample.csv](quota-requests-sample.csv) file with your expected resource usage for the hackathon. (The script will apply it for each subscription found in your tenant unless you limit the scope with the `-managementGroupId` parameter.)
 Use the `processQuotaRequests.ps1` script to analyze your Azure subscriptions' capacity and quota for the hackathon.
 
 **You can also use f.e. `processQuotaRequests.ps1 -managementGroupId d5d99ee9-928e-411c-b822-60836adfef65` to limit the scope to subscriptions within a specific management group (recursively).**
