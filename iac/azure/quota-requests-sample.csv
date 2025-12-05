@@ -1,0 +1,5 @@
+QuotaType,ServiceType,Location,PricingPlan,NewLimit,DeploymentType,SKU,vCoreLimit,SubnetLimit
+WebApp,WebApp,SwitzerlandNorth,PremiumV3,5,ZoneRedundant,,,
+WebApp,WebApp,SwitzerlandNorth,StandardS1,3,ZoneRedundant,,,
+Compute,VM,SwitzerlandNorth,,100,,DSv3 Series,,
+Database,SQLMI,SwitzerlandNorth,,,,,64,200
