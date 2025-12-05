@@ -28,7 +28,7 @@ if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
 $subscriptionIdFilter = $null
 if($managementGroupId -ne "") {
     $subscriptionIdFilter = @{}
-    Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand | Select-Object -ExpandProperty Children | ForEach-Object {
+    Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand -ErrorAction Stop | Select-Object -ExpandProperty Children | ForEach-Object {
         if($_.Type -eq "/subscriptions") {
             $subscriptionIdFilter[$_.Name.ToLower()] = $true
         }
@@ -128,7 +128,12 @@ $subs = $null
 #create management group and add subscriptions
 if(-not (Get-AzManagementGroup -GroupName "labsubscriptions" -ErrorAction SilentlyContinue)) {
     Write-Host "Creating management group 'labsubscriptions'"
-    New-AzManagementGroup -GroupName "labsubscriptions" -DisplayName "Lab Subscriptions"
+    if($managementGroupId -ne "") {
+        New-AzManagementGroup -GroupName "labsubscriptions" -DisplayName "Lab Subscriptions" -ParentId (Get-AzManagementGroup -GroupName $managementGroupId -ErrorAction Stop).Id
+    }
+    else {
+        New-AzManagementGroup -GroupName "labsubscriptions" -DisplayName "Lab Subscriptions"
+    }
 }
 
 
