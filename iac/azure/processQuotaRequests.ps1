@@ -360,7 +360,7 @@ if($managementGroupId -ne "") {
     }
 }
 
-foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWith($subscriptionPrefix)})) {
+foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWith($subscriptionPrefix) -and $_.State -eq "Enabled"})) {
     if($null -ne $subscriptionIdFilter) {
         if(-not $subscriptionIdFilter.ContainsKey($sub.Id.ToLower())) {
             continue
