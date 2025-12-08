@@ -156,13 +156,15 @@ if($tenantNames.Count -eq 0) {
 $createdUsers = @()
 $createdEntraIdUserSettings = @()
 $userDomain = $mgctx.Account.Split('@')[1]
-$i = $startUserIndex
+$currentIndex = ($startUserIndex - 1)
 foreach($tenantName in $tenantNames) {
+    $currentIndex++
+
     Write-Host "Creating user for hackbox-tenant `"$tenantName`" in entra id..."
     $currentUser = [PSCustomObject]@{
         tenant = $tenantName
-        userPrincipalName = "{0}-{1:d3}@{2}" -f @($userNamePrefix, [int]$i, $userDomain)
-        userName = "{0}-{1:d3}" -f @($userNamePrefix, [int]$i)
+        userPrincipalName = "{0}-{1:d3}@{2}" -f @($userNamePrefix, [int]$currentIndex, $userDomain)
+        userName = "{0}-{1:d3}" -f @($userNamePrefix, [int]$currentIndex)
         password = (New-Guid).Guid
         temporaryAccessPass = ""
         startFrom = $null
@@ -184,6 +186,12 @@ foreach($tenantName in $tenantNames) {
             break
         }
         catch {
+            if(
+                ([string]$_.Exception.Message).Contains("Another object") -and
+                ([string]$_.Exception.Message).Contains("already exists")
+            ) {
+                throw "User $($currentUser.userPrincipalName) already exists in Entra ID. Please choose a different userNamePrefix or startUserIndex."
+            }
             Write-Warning "Failed to create user $($currentUser.userPrincipalName). Retrying...`n`t$($_.Exception.Message)"
             Start-Sleep -Seconds 2
         }
@@ -272,12 +280,11 @@ foreach($tenantName in $tenantNames) {
             note = "Valid from $($currentUser.startFrom.ToString("yyyy-MM-dd HH:mm:ss")) to $($currentUser.validTo.ToString("yyyy-MM-dd HH:mm:ss"))"
         })
     }
-    $i++
 }
 
 
 $createdEntraIdUserSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath (Join-Path $consoleRoot "createdEntraIdUserSettings.json") -Encoding utf8
-Write-Host "Saved Settings of created Entra ID users to: $jsonPath"
+Write-Host "Saved Settings of created Entra ID users to createdEntraIdUserSettings.json"
 
 if($csvPath.Trim() -ne "") {
     $createdUsers | Export-Csv -Path $csvPath -NoTypeInformation -Encoding utf8

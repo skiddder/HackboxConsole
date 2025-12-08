@@ -29,8 +29,13 @@ param(
     [string[]]$AllowedEntraUserIds = @()
 )
 
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
 # Validate parameters
 if($DeploymentType -eq 'resourcegroup' -and [string]::IsNullOrEmpty($ResourceGroupName)) {
     throw "ResourceGroupName must be provided when DeploymentType is 'resourcegroup'."
 }
 
+# You can use the following lines to point to a template, sitting in the same folder
+# $template = Join-Path $scriptPath "template.bicep"
+# $template = Join-Path $scriptPath "template.json"
