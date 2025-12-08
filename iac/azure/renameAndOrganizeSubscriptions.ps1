@@ -16,7 +16,7 @@ param(
 )
 
 if(-not (Get-Module -ListAvailable -Name Az)) {
-    Install-Module -Name Az -AllowedClobber -Force
+    Install-Module -Name Az -AllowClobber -Force
 }
 Import-Module Az
 

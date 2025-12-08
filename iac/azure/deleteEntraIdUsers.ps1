@@ -97,17 +97,15 @@ Get-MgUser -Filter "startsWith(userPrincipalName,'$userNamePrefix')" | ForEach-O
 
 if($purgeUsers) {
     Write-Host "Purging deleted users..."
-    do {
-        $deletedUsers = Get-MgDirectoryDeletedItemAsUser -Filter "startsWith(userPrincipalName,'$userNamePrefix')" -All
-        foreach ($deletedUser in $deletedUsers) {
-            $userName = ($deletedUser.UserPrincipalName -split "@")[0]
-            if($userName.StartsWith($userNamePrefix + "-")) {
-                $userNumber = [int]$userName.Substring($userNamePrefix.Length + 1)
-                if($userNumber -ge $startUserIndex -and $userNumber -le $stopUserIndex) {
-                    Write-Host "Permanently deleting user: $($deletedUser.UserPrincipalName) (Id: $($deletedUser.Id))"
-                    Remove-MgDirectoryDeletedItem -DirectoryObjectId $deletedUser.Id -Confirm:$false
-                }
+    foreach ($deletedUser in (Get-MgDirectoryDeletedItemAsUser -All)) {
+        $userName = ($deletedUser.UserPrincipalName -split "@")[0]
+        $userName = $userName.Replace($deletedUser.Id.Replace("-", ""), "")
+        if($userName.StartsWith($userNamePrefix + "-")) {
+            $userNumber = [int]$userName.Substring($userNamePrefix.Length + 1)
+            if($userNumber -ge $startUserIndex -and $userNumber -le $stopUserIndex) {
+                Write-Host "Permanently deleting user: $($deletedUser.UserPrincipalName) (Id: $($deletedUser.Id))"
+                Remove-MgDirectoryDeletedItem -DirectoryObjectId $deletedUser.Id -Confirm:$false
             }
         }
-    } while ($deletedUsers.Count -gt 0)
+    }
 }
