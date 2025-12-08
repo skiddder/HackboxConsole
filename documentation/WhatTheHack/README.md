@@ -85,10 +85,6 @@ Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the
    1. After the Event
       1. Delete the lab environments:
          ```pwsh
-            # for a resource group based deployment (multiple teams per subscription)
-            .\iac\azure\destroyLabEnvironments.ps1 -labDirectory C:\path\to\directory\lab\ -managementGroupId "labsubscriptions" -subscriptionPrefix "traininglab-" -deploymentType "resourcegroup"
-            # or for subscription based deployments
-            .\iac\azure\destroyLabEnvironments.ps1 -labDirectory C:\path\to\directory\lab\ -managementGroupId "labsubscriptions" -subscriptionPrefix "traininglab-" -deploymentType "subscription"
             # as an alternative you can also delete all the resource groups
             .\iac\azure\removeAllResourceGroupsFromSubscriptions.ps1 -managementGroupId "labsubscriptions" -subscriptionPrefix "traininglab-"
          ```
