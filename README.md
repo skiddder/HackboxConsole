@@ -50,8 +50,8 @@ Easy and quick way to test the console use:
 ```pwsh
 # for single tenant run:
 .\iac\deployHackerConsole.ps1 `
-    -SourceChallengesDir ..\ContosoHotelOpenHack\challenges\ `
-    -SourceSolutionsDir ..\ContosoHotelOpenHack\solutions\ `
+    -SourceChallengesDir ..\path\to\challenges\ `
+    -SourceSolutionsDir ..\path\to\solutions\ `
     -hackerUsername "hacker" `
     -hackerPassword ("hacker" | ConvertTo-SecureString -AsPlainText -Force) `
     -coachUsername "coach" `
