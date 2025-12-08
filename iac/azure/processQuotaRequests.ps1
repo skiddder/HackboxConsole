@@ -1,3 +1,31 @@
+<#
+.SYNOPSIS
+Submits Azure quota increase tickets for matching subscriptions using a CSV manifest.
+
+.DESCRIPTION
+Imports quota request rows from the supplied CSV, validates required fields, and creates support tickets for each eligible subscription filtered by optional management group and prefix settings.
+
+.PARAMETER csvFilePath
+Path to the CSV file describing quota requests. (Columns: QuotaType, ServiceType, Location, PricingPlan, NewLimit, DeploymentType, SKU, vCoreLimit, SubnetLimit)
+
+.PARAMETER ContactPreferredTimeZone
+Time zone to include in the support contact metadata (defaults to UTC).
+
+.PARAMETER ContactPreferredLanguage
+Preferred support language code (defaults to en-US).
+
+.PARAMETER ContactCountry
+Country/region for the support contact (defaults to USA).
+
+.PARAMETER managementGroupId
+Optional management group ID used to further filter subscriptions.
+
+.PARAMETER subscriptionPrefix
+Subscription name prefix used to scope which enabled subscriptions are processed (defaults to traininglab-).
+
+.EXAMPLE
+PS> .\processQuotaRequests.ps1 -csvFilePath .\quotaRequests.csv -subscriptionPrefix "traininglab-"
+#>
 param(
     [Parameter(Mandatory=$true)]
     [string]$csvFilePath,
@@ -360,7 +388,7 @@ if($managementGroupId -ne "") {
     }
 }
 
-foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWith($subscriptionPrefix) -and $_.State -eq "Enabled"})) {
+foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWith($subscriptionPrefix.ToLower()) -and $_.State -eq "Enabled"})) {
     if($null -ne $subscriptionIdFilter) {
         if(-not $subscriptionIdFilter.ContainsKey($sub.Id.ToLower())) {
             continue
@@ -396,5 +424,6 @@ foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWi
         catch {
             Write-Error "    - Failed to Create quota ticket for subscription $($sub.SubscriptionId): $_"
         }
+        Start-Sleep -Seconds 2
     }
 }
