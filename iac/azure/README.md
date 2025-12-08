@@ -35,6 +35,9 @@ Use `Get-Help .\processQuotaRequests.ps1 -Detailed` or `Get-Help .\processQuotaR
 
 
 ### Days before the hackathon: Create Entra ID users
+
+Please follow this guide: [Temporary Access Pass (TAP) authentication method](https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass)
+
 Use the `createEntraIdUsers.ps1` script to create Entra ID users for hackathon participants before the hackathon starts.
 
 Use `Get-Help .\createEntraIdUsers.ps1 -Detailed` or `Get-Help .\createEntraIdUsers.ps1 -Full` to see all information (parameters, examples) for the script.
