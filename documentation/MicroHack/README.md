@@ -42,6 +42,9 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
 1. $\color{#D29922}\textsf{\Large\kern{0.2cm}\normalsize(Optional)}$ In case you want to run it within pre-built environments:
    1. Weeks before the Event
       1. Create the lab users:
+         > [!IMPORTANT]  
+         > Please follow this guide to enable the TAP and set the maximum lifetime in days to satisfy the hackathon duration: [Temporary Access Pass (TAP) authentication method](https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass)
+
          ```pwsh
          $startDate = Get-Date "2025-12-12 08:00"
          $stopDate =  Get-Date -Date $startDate.addDays(2) -Hour 16
@@ -61,7 +64,7 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
       1. Prepare the quota requests (if applicable):
          > [!IMPORTANT]  
          > Do not forget to edit the csv file, in case you host multiple teams per subscription!!
-
+         
          ```pwsh
          # submitting the quota requests from the csv file
          .\iac\azure\prepareQuotaRequests.ps1 -labDirectory C:\path\to\directory\lab\quota-requests.csv
