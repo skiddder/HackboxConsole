@@ -103,16 +103,19 @@ function Remove-OrphanedRoleAssignments {
         [string]$Scope
     )
 
+    $lowerScope = $Scope.ToLower()
     # get the assignments for the resource
     foreach($assignment in Get-AzRoleAssignment -Scope $Scope) {
-        # in case the object type is unknown, the object id does no longer exist
-        if($assignment.ObjectType -eq "Unknown") {
-            # saveguard check if the object id is still valid (in case of insufficient permissions, the object will be assumed to not exist)
-            if(-not $graphLiteObject.objectExists($assignment.ObjectId)) {
-                Write-Host (" - Removing role assignment: " + $assignment.RoleDefinitionName + " for " + $assignment.ObjectId)
-                $result = $assignment | Remove-AzRoleAssignment -ErrorAction Continue
-                Write-Host (" - Result: " + $result)
-            }
+        #are we in current scope?
+        if(-not $assignment.Scope.ToLower().StartsWith($lowerScope)) {
+            continue
+        }
+        
+        # saveguard check if the object id is still valid (in case of insufficient permissions, the object will be assumed to not exist)
+        if(-not $graphLiteObject.objectExists($assignment.ObjectId)) {
+            Write-Host (" - Removing role assignment: " + $assignment.RoleDefinitionName + " for " + $assignment.ObjectId)
+            $result = $assignment | Remove-AzRoleAssignment -ErrorAction Continue
+            Write-Host (" - Result: " + $result)
         }
     }
 }
