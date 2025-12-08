@@ -46,9 +46,7 @@ Thanks to [zero-md](https://github.com/zerodevx/zero-md) the markdown files are 
 Have a directory containing the challenges. It will walk through the directory (including subdirectories) and look for files named ``*challenge*.md``.
 Have a directory containing the solutions. It will walk through the directory (including subdirectories) and look for files named ``*solution*.md``.
 
-
-Deploy the console with the markdown files from the ContosoHotelOpenHack repository
-Either run for a single tenant (one team, one coach)
+Easy and quick way to test the console use:
 ```pwsh
 # for single tenant run:
 .\iac\deployHackerConsole.ps1 `
@@ -59,32 +57,11 @@ Either run for a single tenant (one team, one coach)
     -coachUsername "coach" `
     -coachPassword ("coach" | ConvertTo-SecureString -AsPlainText -Force)
 ```
-Or run for multiple tenants (multiple teams with one coach each)
-```pwsh
-# for multi tenant create the users.json first
-.\iac\createUsers.ps1 -numberOfTenants 3 -baseHackerUsername "hacker" -baseCoachUsername "coach"
-# for multi tenant run:
-.\iac\deployHackerConsole.ps1 `
-    -SourceChallengesDir ..\ContosoHotelOpenHack\challenges\ `
-    -SourceSolutionsDir ..\ContosoHotelOpenHack\solutions\
-```
 
-Publish additional credentials to the storage account in this example the name of the credential is ``Example Password`` with the (secret) value ``DontTellAnyone``
-```pwsh
-.\iac\addCredential.ps1 `
-    -storageAccountName "storage...." `
-    -name "Example Password" `
-    -value "DontTellAnyone"
-# for multi tenant please also add: -tenant "team1"
-```
-
-In addtion, you can also add multiple credentials from a json or csv file:
-```pwsh
-# for csv with required columns: name, value   (optional columns: group, tenant)
-Get-Content .\creds.csv | ConvertFrom-Csv | .\iac\addMultipleCredentails.ps1 -storageAccountName "storage...."
-# for json array of objects with required attributes: name, value   (optional attributes: group, tenant)
-Get-Content .\creds.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1 -storageAccountName "storage...." 
-```
+For real deployment use **one** of the following options:
+  * [Generic Deployment Instructions](documentation/Generic/README.md)
+  * [WhatTheHack - Integration Guide](documentation/WhatTheHack/README.md)
+  * [MicroHack - Integration Guide](documentation/MicroHack/README.md)
 
 
 ## users.json - Multi Tenant User Definition

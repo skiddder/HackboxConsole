@@ -1,10 +1,6 @@
-# MicroHack Documentation
+# Generic Documentation
 
-Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](https://www.microsoft.com/de-de/techwiese/events/microhacks/default.aspx)) hackathon with the Hackathon Console.
-
-> [!NOTE]
-> **7+ hacks are supported.** There are some unsupported hacks (~4), that are linked ones or incomplete.
-
+Generic Build Instructions
 
 ## Prerequisites
  - Powershell 7+
@@ -16,25 +12,27 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
 
 ## Execution Steps
 
-1. Choose a hack
-   ```pwsh
-   .\documentation\MicroHack\chooseMicroHack.ps1 | Format-Table Name, RelativePath, HackVariants
-   ```
-
-1. Prepare the environment for the chosen hack
-   ```pwsh
-   .\documentation\MicroHack\chooseMicroHack.ps1 -HackName "04_BCDR_Azure_Native"
-   ```
+1. You have:
+   * a **challenges directory**: It containts ``*challenge*.md`` files (can also be within subdirectories).
+   * a **solutions directory**: It containts ``*solution*.md`` files (can also be within subdirectories).
+   * an optional **lab directory**: It contains:
+     - an optional [quota-requests.csv](../../iac/sample-lab/quota-requests.csv) file defining the required Azure resources per subscription
+     - an optional [deploy-lab.ps1](../../iac/sample-lab/deploy-lab.ps1) script to deploy the environments per team (subscription or resource group based deployment)
+     - an optional [destroy-lab.ps1](../../iac/sample-lab/destroy-lab.ps1) script to destroy the environments per team
 
 1. Create the Hackathon Console Users (in this example, we prepare logins for 4 teams with a single coach for each team)
    ```pwsh
    .\iac\createUsers.ps1 -numberOfTenants 4
    ```
 
-1. Deploy to Azure
+1. Build the Hackathon Console and deploy it to Azure
    ```pwsh
-   # we use -doNotCopyChallengesOrSolutions, because the above steps already copied everything to the right place
-   .\iac\deployHackerConsole.ps1 -doNotCopyChallengesOrSolutions
+   # select the appropriate subscription for the management resources
+   Select-AzSubscription -SubscriptionId "management"
+   # deploy the Hackathon Console
+   .\iac\deployHackerConsole.ps1 `
+    -SourceChallengesDir C:\path\to\directory\challenges\ `
+    -SourceSolutionsDir C:\path\to\directory\solutions\
    ```
 
 1. Check the users.json file for the logins of the teams and coaches
@@ -95,3 +93,4 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
          # remove orphaned role assignments
          .\iac\azure\removeOrphanedRoleAssignments.ps1 -includeResourceGroups
          ```
+
