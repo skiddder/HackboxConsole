@@ -4,6 +4,7 @@
 > Comes with support for:
 > - Microsoft [WhatTheHack - Integration Guide](documentation/WhatTheHack/README.md)
 > - Microsoft [MicroHack - Integration Guide](documentation/MicroHack/README.md)
+> - Or your own markdown based challenges and solutions: [Generic Deployment Instructions](documentation/Generic/README.md)
 
 
 
