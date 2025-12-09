@@ -5,12 +5,13 @@ In this directory, you will find useful scripts to help prepare your Azure envir
 
 ## Scripts
 
+ - [renameAndOrganizeSubscriptions.ps1](renameAndOrganizeSubscriptions.ps1): Renames Azure subscriptions to a management/traininglab scheme and organizes traininglab subscriptions into a management group called "labsubscriptions".
  - [createEntraIdUsers.ps1](createEntraIdUsers.ps1): Creates Entra ID users in your Entra ID.
  - [deleteEntraIdUsers.ps1](deleteEntraIdUsers.ps1): Deletes Entra ID users from your Entra ID.
- - [removeOrphanedRoleAssignments.ps1](removeOrphanedRoleAssignments.ps1): Removes Azure role assignments that reference non-existent principals across subscriptions and resource groups.
- - [renameAndOrganizeSubscriptions.ps1](renameAndOrganizeSubscriptions.ps1): Renames Azure subscriptions to a management/traininglab scheme and organizes traininglab subscriptions into a management group called "labsubscriptions".
  - [processQuotaRequests.ps1](processQuotaRequests.ps1): Creates support tickets for each subscription to request quota increases as specified within the CSV file.
+ - [deployLabEnvironments.ps1](deployLabEnvironments.ps1): Assigns Entra ID users to subscriptions/resourcegroups and deploys lab environments for each user.
  - [removeAllResourceGroupsFromSubscriptions.ps1](removeAllResourceGroupsFromSubscriptions.ps1): Removes every resource group from Azure subscriptions matching the provided prefix, optionally scoped to a management group.
+ - [removeOrphanedRoleAssignments.ps1](removeOrphanedRoleAssignments.ps1): Removes Azure role assignments that reference non-existent principals across subscriptions and resource groups.
  
 
 

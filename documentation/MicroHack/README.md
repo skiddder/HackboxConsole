@@ -94,3 +94,13 @@ Run a [MicroHack](https://github.com/microsoft/MicroHack) ([Offical Website](htt
          # remove orphaned role assignments
          .\iac\azure\removeOrphanedRoleAssignments.ps1 -includeResourceGroups
          ```
+
+1. Collect the time tracking data for your participants after the event:
+   ```pwsh
+   # select the appropriate subscription for the management resources
+   Select-AzSubscription -SubscriptionId "management"
+   # collect the timing data
+   .\iac\getTimings.ps1
+   # do something useful with the timings.csv file
+   # f.e. import it into Excel or PowerBI for further analysis on how to improve your next event
+   ```
