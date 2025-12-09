@@ -21,8 +21,18 @@ param (
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $consoleRoot = Split-Path -Parent $scriptPath
 
+if(-not (Get-Module -ListAvailable -Name Az)) {
+    Install-Module -Name Az -AllowClobber -Force
+}
+Import-Module Az
+
+
+if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
+    Connect-AzAccount -UseDeviceAuthentication
+}
+
 # Install required PowerShell modules
-if(-not (Get-Command bicep.exe -ErrorAction SilentlyContinue)) {
+if((-not (Get-Command bicep.exe -ErrorAction SilentlyContinue)) -and (-not (Get-Command bicep -ErrorAction SilentlyContinue))) {
     Write-Error "Bicep CLI not found. Go to: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-powershell"
     throw "Bicep CLI not found. Please install Bicep CLI and make sure it is in your PATH."
 }
