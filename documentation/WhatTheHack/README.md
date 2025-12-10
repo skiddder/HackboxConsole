@@ -3,7 +3,7 @@
 Run a [WhatTheHack](https://github.com/microsoft/WhatTheHack) hackathon with the Hackathon Console.
 
 > [!NOTE]
-> **59+ hacks are supported.** There are some hacks (~12), that do not have markdown files, are not supported. (Unsupported hacks are usually using word or powerpoint files instead of markdown.)
+> **59+ hacks are supported.** Some hacks (~12) are not supported. (Unsupported hacks are usually using word or powerpoint files instead of markdown.)
 
 ## Prerequisites
  - Powershell 7+
