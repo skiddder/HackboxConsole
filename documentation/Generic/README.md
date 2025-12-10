@@ -9,16 +9,16 @@ Generic Build Instructions
  - Azure Subscription
  - Bicep installed ( https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#install-manually )
  - This repository cloned (``git clone https://github.com/qxsch/HackboxConsole.git``)
-
-## Execution Steps
-
-1. You have:
+ - You have:
    * a **challenges directory**: It containts ``*challenge*.md`` files (can also be within subdirectories).
    * a **solutions directory**: It containts ``*solution*.md`` files (can also be within subdirectories).
    * an optional **lab directory**: It contains:
      - an optional [quota-requests.csv](../../iac/sample-lab/quota-requests.csv) file defining the required Azure resources per subscription
      - an optional [deploy-lab.ps1](../../iac/sample-lab/deploy-lab.ps1) script to deploy the environments per team (subscription or resource group based deployment)
      - an optional [destroy-lab.ps1](../../iac/sample-lab/destroy-lab.ps1) script to destroy the environments per team
+
+
+## Execution Steps
 
 1. Create the Hackathon Console Users (in this example, we prepare logins for 4 teams with a single coach for each team)
    ```pwsh
