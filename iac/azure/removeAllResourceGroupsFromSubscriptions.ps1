@@ -38,7 +38,7 @@ foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWi
     Write-Host "Removing all Resource Groups from Subscription: $($sub.Name) ($($sub.Id))" -ForegroundColor Yellow
     foreach($rg in (Get-AzResourceGroup)) {
         Write-Host "  Deleting Resource Group: $($rg.ResourceGroupName)" -ForegroundColor Cyan
-        Remove-AzResourceGroup -Name $rg.ResourceGroupName -Force -Confirm:$false -ErrorAction Stop | Out-Null
+        Remove-AzResourceGroup -Name $rg.ResourceGroupName -Force -Confirm:$false -ErrorAction Continue | Out-Null
         Start-Sleep -Seconds 2
     }
 }
