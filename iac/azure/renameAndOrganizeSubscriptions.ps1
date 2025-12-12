@@ -86,8 +86,33 @@ if(-not $hasManagement) {
                 continue
             }
         }
-        Rename-Subscription -SubscriptionId $sub.Id -NewName "management" 
+        Rename-Subscription -SubscriptionId $sub.Id -NewName "management"
         $renamed = $true
+        
+        # for the management subscription, register required resource providers
+        Write-Host "Registering Resource Providers for '$($sub.Name)'"
+        Select-AzSubscription -SubscriptionId $sub.Id  | Out-Null
+        foreach($rp in @(
+            "Microsoft.Compute",
+            "Microsoft.Network",
+            "Microsoft.Storage",
+            "Microsoft.Resources",
+            "Microsoft.ContainerRegistry",
+            "Microsoft.ContainerService",
+            "Microsoft.KeyVault",
+            "Microsoft.OperationalInsights",
+            "Microsoft.Web"
+        )) {
+            Write-Host "  Registering resource provider '$rp'"
+            try {
+                Register-AzResourceProvider -ProviderNamespace $rp -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Warning "Failed to register resource provider '$rp' for subscription '$($sub.Name)': $($_.Exception.Message)"
+            }
+            Start-Sleep -Seconds 1
+        }
+
         break
     }
     if(-not $renamed) {
@@ -145,7 +170,9 @@ Get-AzManagementGroup -GroupName "labsubscriptions" -Recurse -Expand | Select-Ob
     }
 }
 
-foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWith('traininglab-')})) {
+$subscriptions = Get-AzSubscription
+
+foreach($sub in ($subscriptions  | Where-Object { $_.Name.ToLower().StartsWith('traininglab-')})) {
     # apply filter if specified
     if($null -ne $subscriptionIdFilter) {
         if(-not $subscriptionIdFilter.ContainsKey($sub.Id.ToLower())) {
@@ -153,8 +180,12 @@ foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWi
         }
     }
     if($existingSubscriptionIds.ContainsKey($sub.Id.ToLower())) {
-        return
+        continue
     }
+    Write-Host "Registering Resource Providers for '$($sub.Name)'"
+
+
     Write-Host "Adding subscription '$($sub.Name)' to management group 'labsubscriptions'"
     New-AzManagementGroupSubscription -GroupName "labsubscriptions" -SubscriptionId $sub.Id -ErrorAction Stop | Out-Null
 }
+
