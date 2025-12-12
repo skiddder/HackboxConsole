@@ -88,7 +88,7 @@ if(-not $hasManagement) {
         }
         Rename-Subscription -SubscriptionId $sub.Id -NewName "management"
         $renamed = $true
-        
+
         # for the management subscription, register required resource providers
         Write-Host "Registering Resource Providers for '$($sub.Name)'"
         Select-AzSubscription -SubscriptionId $sub.Id  | Out-Null
@@ -101,7 +101,8 @@ if(-not $hasManagement) {
             "Microsoft.ContainerService",
             "Microsoft.KeyVault",
             "Microsoft.OperationalInsights",
-            "Microsoft.Web"
+            "Microsoft.Web",
+            "Microsoft.CloudShell"
         )) {
             Write-Host "  Registering resource provider '$rp'"
             try {
