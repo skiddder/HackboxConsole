@@ -35,10 +35,29 @@ foreach($sub in (Get-AzSubscription  | Where-Object { $_.Name.ToLower().StartsWi
     }
 
     Set-AzContext -SubscriptionId $sub.Id -ErrorAction Stop | Out-Null
+
+    $locksRemoved = 0
+    Write-Host "Removing all locks from Subscription: $($sub.Name) ($($sub.Id))" -ForegroundColor Yellow
+    foreach($lock in (Get-AzResourceLock -ErrorAction SilentlyContinue | Sort-Object ResourceId)) {
+        Write-Host "  Removing from Resource: $($lock.ResourceId)" -ForegroundColor Cyan
+        $lock | Remove-AzResourceLock -ErrorAction Continue -Force -Confirm:$false | Out-Null
+        $locksRemoved++
+        Start-Sleep -Seconds 1
+    }
+    Write-Host "  Total Locks Removed: $locksRemoved"
+    if($locksRemoved -gt 0) {
+        Write-Host "  Waiting 10 seconds for locks to be fully removed..."
+        Start-Sleep -Seconds 10
+    }
+
+    $resourceGroupsDeleted = 0
     Write-Host "Removing all Resource Groups from Subscription: $($sub.Name) ($($sub.Id))" -ForegroundColor Yellow
     foreach($rg in (Get-AzResourceGroup)) {
+
         Write-Host "  Deleting Resource Group: $($rg.ResourceGroupName)" -ForegroundColor Cyan
         Remove-AzResourceGroup -Name $rg.ResourceGroupName -Force -Confirm:$false -ErrorAction Continue | Out-Null
+        $resourceGroupsDeleted++
         Start-Sleep -Seconds 2
     }
+    Write-Host "  Total Resource Groups Deleted: $resourceGroupsDeleted"
 }
