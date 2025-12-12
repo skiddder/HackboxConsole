@@ -13,6 +13,14 @@ Solutions
 				<a href="#" class="pill-btn current" id="navToCurrentSolution">Current: <span id="solutionIndex">?</span></a>
 				<a href="#" class="pill-btn" id="navToNextSolution" aria-label="Next solution">Next ⟩</a>
 			</div>
+            {% if user and user.is_authenticated and user.role == 'coach' %}
+			<div class="toolbar-group">
+				<a href="#" class="pill-btn success" id="approveCurrentChallenge">Approve</a>
+				<a href="#" class="pill-btn warn" id="approveAllChallenges">Approve All</a>
+				<a href="#" class="pill-btn warn" id="revertApproval">Revert</a>
+				<a href="#" class="pill-btn danger" id="revertAllApprovals">Reset</a>
+			</div>
+            {% endif %}
 {% endblock %}
 {% block content %}
 <h1 id="solutionTitle" class="page-title">Solutions</h1>
@@ -51,5 +59,6 @@ Solutions
 <script type="text/javascript">
     window.defaultSolutionUrl='{{ url_for("static_solutions", filename="") }}';
 </script>
+<script src="{{ url_for('static', filename='assets/js/mdmanager.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
 {% endblock %}
