@@ -14,6 +14,8 @@ class MdManagerSettings {
     #zeroMdElement = null;
     #messageDialog = null;
     #allowedMdPaths = [];
+    #mdRetrievalEndpoint = '/api/list/challenges';
+    #mdRootPath = '/md/challenges/';
     constructor(obj={}, logSettings=false) {
         if(obj.zeroMdElement) {
             this.#zeroMdElement = this.#elementFrom(obj.zeroMdElement);
@@ -132,9 +134,27 @@ class MdManagerSettings {
             this.#allowedMdPaths = ["/md/challenges/", "/md/solutions/"];
         }
 
+        if(obj.mdRetrievalMode) {
+            if(String(obj.mdRetrievalMode).toLowerCase() === "solutions") {
+                this.#mdRetrievalEndpoint = '/api/list/solutions';
+                this.#mdRootPath = '/md/solutions/';
+            }
+            else {
+                this.#mdRetrievalEndpoint = '/api/list/challenges';
+                this.#mdRootPath = '/md/challenges/';
+            }
+        }
+
         if(logSettings) {
             console.log("MdManagerSettings initialized", this);
         }
+    }
+
+    getMdEndpoints() {
+        return {
+            mdRetrievalEndpoint: this.#mdRetrievalEndpoint,
+            mdRootPath: this.#mdRootPath
+        };
     }
 
     getZeroMdElement() {
@@ -200,6 +220,7 @@ class MdManager {
     #templates = {};
     #elements = {};
     #allowedMdPaths = [];
+    #mdEndpoints = {};
     constructor(settings) {
         if(settings === null || settings === undefined) {
             throw new Error("MdManagerSettings is required");
@@ -222,6 +243,13 @@ class MdManager {
         this.#allowedMdPaths = settings.getAllowedMdPaths();
         this.#templates = settings.getTemplates();
         this.#elements = settings.getElements();
+        this.#mdEndpoints = settings.getMdEndpoints();
+        if(this.#mdEndpoints.mdRetrievalEndpoint.trim() == "") {
+            throw new Error("retrievalEndpoint is required");
+        }
+        if(this.#mdEndpoints.mdRootPath.trim() == "") {
+            throw new Error("mdRootPath is required");
+        }
 
         if(!(this.#elements.zeroMdElement instanceof HTMLElement)) {
             throw new Error("zeroMdElement is required");
@@ -426,7 +454,7 @@ class MdManager {
     }
 
     async getChallenges() {
-        return fetch("/api/list/challenges")
+        return fetch(this.#mdEndpoints.mdRetrievalEndpoint)
             .then(response => response.json());
     }
 
@@ -652,7 +680,7 @@ class MdManager {
             }
         }
 
-        var mdUrl = "/md/challenges/";
+        var mdUrl = this.#mdEndpoints.mdRootPath;
         if(window.defaultChallengeUrl) {
             mdUrl = window.defaultChallengeUrl;
         }

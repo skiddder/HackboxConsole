@@ -15,7 +15,8 @@ window.challenge = window.getMdManager(
         mdSubtitleTemplate: "Subsite:  {value}",
         mdIndex: "challengeIndex",
         messageDialog: "challengeDialog",
-        allowedMdPaths: ["/md/challenges/"]
+        allowedMdPaths: ["/md/challenges/"],
+        mdRetrievalMode: "challenges"
     }
 );
 window.challenge.setPeriodicRefresh(10);

@@ -15,7 +15,8 @@ window.solution = window.getMdManager(
         mdSubtitleTemplate: "Subsite:  {value}",
         mdIndex: "solutionIndex",
         messageDialog: "solutionDialog",
-        allowedMdPaths: ["/md/challenges/", "/md/solutions/"]
+        allowedMdPaths: ["/md/challenges/", "/md/solutions/"],
+        mdRetrievalMode: "solutions"
     }
 );
 window.solution.setPeriodicRefresh(10);
