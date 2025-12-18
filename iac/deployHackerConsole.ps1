@@ -24,7 +24,10 @@ $consoleRoot = Split-Path -Parent $scriptPath
 if(-not (Get-Module -ListAvailable -Name Az)) {
     Install-Module -Name Az -AllowClobber -Force
 }
-Import-Module Az
+Import-Module Az.Accounts
+Import-Module Az.Websites
+Import-Module Az.Resources
+
 
 
 if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
