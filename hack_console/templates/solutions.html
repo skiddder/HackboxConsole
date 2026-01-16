@@ -59,6 +59,5 @@ Solutions
 <script type="text/javascript">
     window.defaultSolutionUrl='{{ url_for("static_solutions", filename="") }}';
 </script>
-<script src="{{ url_for('static', filename='assets/js/mdmanager.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
 {% endblock %}

@@ -1,5 +1,7 @@
+import { getMdManager } from "./mdmanager.js";
+
 // challenge view
-window.challenge = window.getMdManager(
+window.challenge = getMdManager(
     {
         navToPrevious: "navToPreviousChallenge",
         navToCurrent: "navToCurrentChallenge",

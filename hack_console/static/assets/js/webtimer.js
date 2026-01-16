@@ -88,20 +88,20 @@ class StopWatch {
         if(document.getElementById("challenge-completion-times-table")) {
             let tblEl = document.getElementById("challenge-completion-times-table");
             tblEl.innerHTML = "";
-            var trHeader = document.createElement('tr');
-            var th1 = document.createElement('th');
+            let trHeader = document.createElement('tr');
+            let th1 = document.createElement('th');
             th1.innerText = 'Challenge';
             trHeader.appendChild(th1);
-            var th2 = document.createElement('th');
+            let th2 = document.createElement('th');
             th2.innerText = 'Elapsed Time';
             trHeader.appendChild(th2);
             tblEl.appendChild(trHeader);
             this.#challengeCompletionTimes.forEach((time, index) => {
-                var tr = document.createElement('tr');
-                var td1 = document.createElement('td');
+                let tr = document.createElement('tr');
+                let td1 = document.createElement('td');
                 td1.innerText = `Challenge ${index + 1}`;
                 tr.appendChild(td1);
-                var td2 = document.createElement('td');
+                let td2 = document.createElement('td');
                 // render in hh:mm:ss
                 let hours = Math.floor(time / 3600);
                 let minutes = Math.floor((time % 3600) / 60);
@@ -116,9 +116,9 @@ class StopWatch {
     }
 
     #render() {
-        var seconds = 0;
-        var minutes = 0;
-        var hours = 0;
+        let seconds = 0;
+        let minutes = 0;
+        let hours = 0;
         if(this.#timerInfo.status === "running") {
             if(document.getElementById("timer-start")) {
                 document.getElementById("timer-start").style.display = "none";
@@ -175,7 +175,7 @@ class StopWatch {
     }
 
     async getChallengeCompletionTimes() {
-        var data = await fetch("/api/get/statistics/challenge-completion-times")
+        let data = await fetch("/api/get/statistics/challenge-completion-times")
             .then(response => response.json());
         if(data.challengeTimes && typeof data.challengeTimes === "object") {
             // sort by key
@@ -192,7 +192,7 @@ class StopWatch {
     }
 
     async getTimerInfo() {
-        var data = await fetch("/api/get/stopwatch")
+        let data = await fetch("/api/get/stopwatch")
             .then(response => response.json());
         console.log("Current Timer Info", data);
         if(data.status && (data.status === "running" || data.status === "stopped")) {
@@ -209,7 +209,7 @@ class StopWatch {
     }
 
     async #setTimerInfo(info) {
-        var data = await fetch("/api/set/stopwatch", {
+        let data = await fetch("/api/set/stopwatch", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'

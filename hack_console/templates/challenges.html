@@ -60,6 +60,5 @@ Challenges
 <script type="text/javascript">
     window.defaultChallengeUrl='{{ url_for("static_challenges", filename="") }}';
 </script>
-<script src="{{ url_for('static', filename='assets/js/mdmanager.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
 {% endblock %}

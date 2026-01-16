@@ -92,13 +92,13 @@ class TechleadManagement {
     }
 
     async getTenantsSettings() {
-        var data = await fetch("/api/get/tenants/settings")
+        let data = await fetch("/api/get/tenants/settings")
             .then(response => response.json());
         console.log("Tenants Settings", data);
         if(data.success && data.tenants && typeof data.tenants === "object") {
             // sort object keys
-            var settings = {};
-            var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+            let settings = {};
+            let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
             Object.keys(data.tenants).sort(collator.compare).forEach(key => {
                 settings[key] = data.tenants[key];
             });
@@ -108,7 +108,7 @@ class TechleadManagement {
     }
 
     #renderTimerCell(cell) {
-        var elapsedSeconds = 0;
+        let elapsedSeconds = 0;
         if(cell.dataset.status === 'running' && cell.dataset.startTime) {
             const startTime = new Date(cell.dataset.startTime);
             elapsedSeconds = Math.floor((Date.now() - startTime.getTime()) / 1000);
@@ -140,7 +140,7 @@ class TechleadManagement {
     }
 
     async #render() {
-        var nodeCollection = document.createDocumentFragment();
+        let nodeCollection = document.createDocumentFragment();
         for(const [tenantId, settings] of Object.entries(this.#tenantSettings)) {
             const tenantDiv = document.createElement('div');
             tenantDiv.className = 'card tenant-settings';
@@ -299,7 +299,7 @@ class TechleadManagement {
                 return;
             }
             
-            var data = await fetch("/api/set/tenants/settings", {
+            let data = await fetch("/api/set/tenants/settings", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,5 +1,7 @@
+import { getMdManager } from "./mdmanager.js";
+
 // solution view
-window.solution = window.getMdManager(
+window.solution = getMdManager(
     {
         navToPrevious: "navToPreviousSolution",
         navToCurrent: "navToCurrentSolution",

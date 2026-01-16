@@ -1,4 +1,6 @@
-class MdManagerSettings {
+import { Clicker } from './clicker.js';
+
+export class MdManagerSettings {
     #navToPrevious = null;
     #navToCurrent = null;
     #navToNext = null;
@@ -208,7 +210,7 @@ class MdManagerSettings {
     }
 }
 
-class MdManager {
+export class MdManager {
     #challenges = [];
     #currentStep = null;
     #currentChallenge = null;
@@ -311,9 +313,9 @@ class MdManager {
                 this.#chachedSecretsRefreshing = true;
                 const secrets = await fetch('/api/show/credentials').then(response => response.json());
                 let d = {};
-                for (var i in secrets) {
-                    var g = secrets[i].group.toLowerCase();
-                    var n = secrets[i].name.toLowerCase();
+                for (let i in secrets) {
+                    let g = secrets[i].group.toLowerCase();
+                    let n = secrets[i].name.toLowerCase();
                     d[`${g}|${n}`] = secrets[i];
                 }
                 this.#cachedSecrets = d;
@@ -325,19 +327,19 @@ class MdManager {
     }
 
     #setZeroMdListener() {
-        var that = this;
-        var currentUrl = new URL(window.location.href);
+        let that = this;
+        let currentUrl = new URL(window.location.href);
         console.log("Current URL", currentUrl);
         this.#elements.zeroMdElement.addEventListener('zero-md-rendered', function() {
             // tooltip variables
-            var tooltip=null;
-            var tooltipTimeout=null;
+            let tooltip=null;
+            let tooltipTimeout=null;
 
-            var mdBase = that.#elements.zeroMdElement.src.substring(0, that.#elements.zeroMdElement.src.lastIndexOf("/") + 1);
+            let mdBase = that.#elements.zeroMdElement.src.substring(0, that.#elements.zeroMdElement.src.lastIndexOf("/") + 1);
             console.log("configuring markdown links");
-            var nodes = that.#elements.zeroMdElement.shadowRoot.querySelectorAll('a[href]');
+            let nodes = that.#elements.zeroMdElement.shadowRoot.querySelectorAll('a[href]');
             nodes.forEach(function(node) {
-                var href = new URL(node.href);
+                let href = new URL(node.href);
                 if(href.host !== currentUrl.host) {
                     // external link
                     node.target = "_blank";
@@ -388,19 +390,20 @@ class MdManager {
                     span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
                 }
                 secretElem.parentElement.replaceChild(span, secretElem);
+                let clicker = new Clicker(span);
                 if(show !== "alwayshidden") {
-                    span.addEventListener('click', function(event) {
-                        if(this.classList.contains('hidden')) {
-                            this.classList.remove('hidden');
-                            this.innerText = '📑 ' + secretValue;
+                    clicker.onSingleClick(function(event) {
+                        if(span.classList.contains('hidden')) {
+                            span.classList.remove('hidden');
+                            span.innerText = '📑 ' + secretValue;
                         }
                         else {
-                            this.classList.add('hidden');
-                            this.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                            span.classList.add('hidden');
+                            span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
                         } 
                     });
                 }
-                span.addEventListener('dblclick', function(event) {
+                clicker.onDoubleClick(function(event) {
                     if(tooltipTimeout) {
                         clearTimeout(tooltipTimeout);
                         tooltipTimeout = null;
@@ -460,7 +463,7 @@ class MdManager {
 
     async getUnlockedStep() {
         try {  
-            var data = await fetch("/api/get/challenge")
+            let data = await fetch("/api/get/challenge")
                 .then(response => response.json());
             console.log("Current challenge", data);
             if(data.challenge) {
@@ -477,7 +480,7 @@ class MdManager {
     async refresh() {
         console.log("Refreshing");
         try{
-            var requiresRendering = false;
+            let requiresRendering = false;
             try {
                 this.#challenges = await this.getChallenges();
                 console.log("Challenges", this.#challenges);
@@ -486,7 +489,7 @@ class MdManager {
                 console.log("Error fetching challenges");
             }
             try {
-                var currentStep = await this.getUnlockedStep();
+                let currentStep = await this.getUnlockedStep();
                 if(currentStep > 0) {
                     if(this.#currentStep !== currentStep) {
                         requiresRendering = true;
@@ -680,14 +683,14 @@ class MdManager {
             }
         }
 
-        var mdUrl = this.#mdEndpoints.mdRootPath;
+        let mdUrl = this.#mdEndpoints.mdRootPath;
         if(window.defaultChallengeUrl) {
             mdUrl = window.defaultChallengeUrl;
         }
         if(mdUrl.endsWith("/")) {
             mdUrl = mdUrl.substring(0, mdUrl.length - 1);
         }
-        var realcurrentChallenge = Math.max(1, Math.min(this.#currentChallenge, this.#challenges.length));
+        let realcurrentChallenge = Math.max(1, Math.min(this.#currentChallenge, this.#challenges.length));
         if(this.#challenges[realcurrentChallenge - 1].startsWith("/")) {
             mdUrl += this.#challenges[realcurrentChallenge - 1];
         }
@@ -729,7 +732,7 @@ class MdManager {
     }
 
     async #setApprovedChallenge(challenge) {        
-        var data = await fetch("/api/set/challenge", {
+        let data = await fetch("/api/set/challenge", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -799,6 +802,6 @@ class MdManager {
     }
 }
 
-window.getMdManager = function(settings) {
+export function getMdManager(settings) {
     return new MdManager(new MdManagerSettings(settings));
 }

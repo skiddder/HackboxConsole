@@ -1,17 +1,18 @@
+import { Clicker } from './clicker.js';
 
 // one off loader
 (async function() {
     // tooltip variables
-    var tooltip=null;
-    var tooltipTimeout=null;
+    let tooltip=null;
+    let tooltipTimeout=null;
 
-    var creds = await fetch('/api/show/credentials').then(response => response.json());
+    let creds = await fetch('/api/show/credentials').then(response => response.json());
     const rootEl = document.getElementById('credentials');
     rootEl.innerHTML = '';
 
-    var newDict = {};
-    for (var i in creds) {
-        var g = creds[i].group;
+    let newDict = {};
+    for (let i in creds) {
+        let g = creds[i].group;
         if(!(g in newDict)) {
             newDict[g] = [];
         }
@@ -19,29 +20,29 @@
     }
 
     // iterate over dict
-    for (var key in newDict) {
-        var title = document.createElement('h2');
+    for (let key in newDict) {
+        let title = document.createElement('h2');
         title.innerText = "Credential Group " + String(key);
         rootEl.appendChild(title);
 
-        var tblEl = document.createElement('table');
-        var trHeader = document.createElement('tr');
-        var th1 = document.createElement('th');
+        let tblEl = document.createElement('table');
+        let trHeader = document.createElement('tr');
+        let th1 = document.createElement('th');
         th1.innerText = 'Name';
         trHeader.appendChild(th1);
-        var th2 = document.createElement('th');
+        let th2 = document.createElement('th');
         th2.innerText = 'Credential';
         trHeader.appendChild(th2);
         tblEl.appendChild(trHeader);
         newDict[key].forEach(cred => {
-            var tr = document.createElement('tr');
+            let tr = document.createElement('tr');
             
-            var td1 = document.createElement('td');
+            let td1 = document.createElement('td');
             td1.innerText = cred.name;
             td1.classList.add('name');
             tr.appendChild(td1);
 
-            var td2 = document.createElement('td');
+            let td2 = document.createElement('td');
             td2.dataset.Credential = cred.Credential;
             td2.classList.add('hidden');
             td2.classList.add('credential');
@@ -51,17 +52,18 @@
                 const noteStr = String(cred.note).trim();
                 td2.title += " (Note: " + noteStr + ")";
             }
-            td2.addEventListener('click', function(event) {
-                this.classList.toggle('hidden');
-                if (this.classList.contains('hidden')) {
-                    this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
+            let clicker = new Clicker(td2);
+            clicker.onSingleClick(function(event) {
+                td2.classList.toggle('hidden');
+                if (td2.classList.contains('hidden')) {
+                    td2.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
                 }
                 else {
-                    this.innerText = this.dataset.Credential;
+                    td2.innerText = td2.dataset.Credential;
                 }
             });
             // double click to copy
-            td2.addEventListener('dblclick', function(event) {
+            clicker.onDoubleClick(function(event) {
                 if(tooltipTimeout) {
                     clearTimeout(tooltipTimeout);
                     tooltipTimeout = null;
@@ -70,7 +72,7 @@
                     tooltip.remove();
                     tooltip = null;
                 }
-                navigator.clipboard.writeText(this.dataset.Credential);
+                navigator.clipboard.writeText(td2.dataset.Credential);
                 // add fading tooltip
                 tooltip = document.createElement('div');
                 tooltip.classList.add('credentialtooltip');
@@ -92,9 +94,9 @@
                 tooltipTimeout = setTimeout(() => {
                     tooltip.remove();
                     // hide credential
-                    if(!this.classList.contains('hidden')) {
-                        this.classList.add('hidden');
-                        this.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
+                    if(!td2.classList.contains('hidden')) {
+                        td2.classList.add('hidden');
+                        td2.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
                     }
                     tooltip = null;
                     tooltipTimeout = null;
