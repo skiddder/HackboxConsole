@@ -317,6 +317,7 @@
       return new TestResult({
         status: ok,
         advices: ok ? [] : [
+          'Use a modern browser that supports SharedArrayBuffer (Edge, Chrome, Firefox, or Safari).',
           'SharedArrayBuffer requires cross-origin isolation.',
           'Set Header Cross-Origin-Opener-Policy: same-origin.',
           'Set Header Cross-Origin-Embedder-Policy: require-corp'
