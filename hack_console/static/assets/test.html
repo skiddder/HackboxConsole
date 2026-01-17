@@ -386,7 +386,7 @@
           ]
         });
       }
-
+      
       let renderOk = false;
       while(!renderOk && i < 10) {
         i++;
@@ -395,15 +395,18 @@
         const text = root ? (root.textContent || '') : '';
         renderOk = root && text.includes('Zero-MD Render OK');
       }
-
+      
       if (!renderOk) {
         console.error('zero-md component did not render content');
         return new TestResult({
           status: false,
           advices: [
-            'The zero-md component loaded but did not render content.',
             'Check browser console for module load errors or CSP violations.',
-            'Ensure COOP/COEP headers are set for cross-origin isolation.'
+            'Check firewall or proxy access to the CDN and ensure the response isn\'t blocked.',
+            'Whitelist the domain cdn.jsdelivr.net in your network settings.',
+            'Verify response CDN headers: Access-Control-Allow-Origin: *',
+            'Verify response CDN headers: Cross-Origin-Resource-Policy: cross-origin',
+            'Verify response CDN headers: Timing-Allow-Origin: *'
           ]
         });
       }
