@@ -502,7 +502,7 @@
         status: testPassed,
         advices: testPassed ? [] : [
           'Check the browser console for errors.',
-          'Check Firewall or proxy settings that may block connections.',
+          'Check Firewall or proxy settings that may block websocket connections.',
           'Ensure the following endpoints are reachable from your network: ' + endpoints.join(', ')
         ]
       });
