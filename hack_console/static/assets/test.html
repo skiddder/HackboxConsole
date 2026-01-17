@@ -1,0 +1,490 @@
+<!doctype html>
+<html>
+<head>
+  <!--
+  The goal of this test page is to help users diagnose common issues that may prevent
+  the Hackbox console from functioning correctly in their browser environment.
+
+  Many enterprise environments have strict security policies, espcially weird proxy or firewall configurations.
+  These can filter headers or block certain endpoints that are required for the Hackbox console to work properly.
+
+  This test page runs a series of checks to verify that the browser environment is correctly configured
+  and provides actionable advice if any issues are detected.
+
+  The whole intention is, that users can call this test page from their browser before starting a hackathon,
+  to ensure their environment is compatible with the Hackbox console requirements.
+  In addition, the test results can be shared with their IT administrators to help them adjust policies if needed.
+
+  And of course, some people might not test their environment before the hackathon,
+  so this page can also be used as a troubleshooting tool if they encounter issues during the event.
+  -->
+  <meta charset="utf-8" />
+  <title>Hackbox Console Check</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .test-list {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .test-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      display: grid;
+      gap: 8px;
+    }
+    .test-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .test-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #0f172a;
+    }
+    .status {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: #f8fafc;
+    }
+    .status.running { color: #6b7280; }
+    .status.running::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #cbd5f5;
+      border-top-color: #6b7280;
+      animation: status-spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    .status.passed { color: #15803d; }
+    .status.failed { color: #b91c1c; }
+    .status.not-applicable { color: #6b7280; }
+    .status.running { border-color: #e5e7eb; }
+    .status.passed { background: #ecfdf3; border-color: #bbf7d0; }
+    .status.failed { background: #fef2f2; border-color: #fecaca; }
+    .status.not-applicable { background: #f8fafc; border-color: #e5e7eb; }
+    .advice {
+      font-size: 12px;
+      color: #92400e;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 8px 10px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.4;
+    }
+    .advice-label {
+      font-weight: 800;
+      color: #92400e;
+      font-size: 14px;
+      margin-right: 6px;
+    }
+    .completion-banner {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+    .completion-banner.success {
+      border: 1px solid #bbf7d0;
+      background: linear-gradient(135deg, #ecfdf3 0%, #f0fdf4 100%);
+      color: #166534;
+    }
+    .completion-banner.success::before {
+      content: '✅';
+      font-size: 16px;
+    }
+    .completion-banner.warning {
+      border: 1px solid #fde68a;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      color: #92400e;
+    }
+    .completion-banner.warning::before {
+      content: '⚠️';
+      font-size: 16px;
+    }
+    .progress-wrap {
+      margin-top: 16px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 10px;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+      box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+      transition: width 0.35s ease;
+    }
+    .progress-label {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #475569;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    @keyframes status-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Hackathon Console Check</h1>
+  <p>Is your enterprise environment ready for the Hackathon Console? Please wait while we run some checks.</p>
+
+  <script type="module">
+    class TestResult {
+      status = null;
+      advices = [];
+      constructor(result) {
+        if(result.status === true || result.status === false) this.status = result.status;
+        else this.status = null;
+
+        if (Array.isArray(result.advices)) {
+          this.advices = result.advices.filter((item) => typeof item === 'string' && item.trim().length > 0);
+        } else if (typeof result.advices === 'string' && result.advices.trim().length > 0) {
+          this.advices = [result.advices.trim()];
+        } else {
+          this.advices = [];
+        }
+      }
+    }
+
+    const statusLabels = {
+      running: 'Running',
+      passed: '✅ Passed',
+      failed: '❌ Failed',
+      'not-applicable': '⚪ Not Applicable'
+    };
+
+    function createResultsList() {
+      const list = document.createElement('div');
+      list.className = 'test-list';
+      document.body.appendChild(list);
+      return list;
+    }
+
+    function createProgressBar() {
+      const wrap = document.createElement('div');
+      wrap.className = 'progress-wrap';
+
+      const bar = document.createElement('div');
+      bar.className = 'progress-bar';
+
+      const label = document.createElement('div');
+      label.className = 'progress-label';
+      label.innerHTML = `<span>Progress</span><span>0%</span>`;
+
+      wrap.appendChild(bar);
+      document.body.appendChild(wrap);
+      document.body.appendChild(label);
+
+      return { bar, label };
+    }
+
+    function updateProgress(progressUi, completed, total) {
+      const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+      progressUi.bar.style.width = `${percent}%`;
+      progressUi.label.innerHTML = `<span>Progress</span><span>${percent}%</span>`;
+    }
+
+    function addTestRow(list, name) {
+      const card = document.createElement('div');
+      const header = document.createElement('div');
+      const title = document.createElement('div');
+      const statusSpan = document.createElement('span');
+      const adviceDiv = document.createElement('div');
+
+      card.className = 'test-card';
+      header.className = 'test-card-header';
+      title.className = 'test-name';
+      title.textContent = name;
+
+      statusSpan.className = 'status running';
+      statusSpan.textContent = statusLabels.running;
+
+      adviceDiv.className = 'advice';
+      adviceDiv.textContent = '';
+
+      header.appendChild(title);
+      header.appendChild(statusSpan);
+      card.appendChild(header);
+      card.appendChild(adviceDiv);
+      list.appendChild(card);
+
+      return { statusSpan, adviceDiv };
+    }
+
+    function setStatus(cell, status) {
+      cell.className = `status ${status}`;
+      cell.textContent = statusLabels[status] || status;
+    }
+
+    function setAdvice(adviceDiv, advices) {
+      const items = Array.isArray(advices) ? advices.filter((item) => typeof item === 'string' && item.trim().length > 0) : [];
+      if (items.length > 0) {
+        const list = items.map((item) => `<li>${item.trim()}</li>`).join('');
+        adviceDiv.innerHTML = `<span class="advice-label">Action:</span><ul>${list}</ul>`;
+        adviceDiv.style.display = 'block';
+      } else {
+        adviceDiv.textContent = '';
+        adviceDiv.style.display = 'none';
+      }
+    }
+
+    async function testCrossOriginIsolation() {
+      const ok = self.crossOriginIsolated === true;
+      return new TestResult({
+        status: ok,
+        advices: ok ? [] : [
+          'Set Header Cross-Origin-Opener-Policy: same-origin.',
+          'Set Header Cross-Origin-Embedder-Policy: require-corp'
+        ]
+      });
+    }
+
+    async function testSharedArrayBuffer() {
+      const ok = typeof SharedArrayBuffer === 'function';
+      return new TestResult({
+        status: ok,
+        advices: ok ? [] : [
+          'SharedArrayBuffer requires cross-origin isolation.',
+          'Set Header Cross-Origin-Opener-Policy: same-origin.',
+          'Set Header Cross-Origin-Embedder-Policy: require-corp'
+        ]
+      });
+    }
+
+    async function testWebAssembly() {
+      const ok = typeof WebAssembly === 'object';
+      return new TestResult({
+        status: ok,
+        advices: ok ? [] : [
+          'Use a modern browser that supports WebAssembly (Edge, Chrome, Firefox, or Safari).',
+          'Enable WebAssembly in the browser or check enterprise policies.',
+          'Set Header Cross-Origin-Opener-Policy: same-origin.',
+          'Set Header Cross-Origin-Embedder-Policy: require-corp'
+        ]
+      });
+    }
+
+    async function testZeroMdModule() {
+      if (typeof customElements === 'undefined') {
+        return new TestResult({
+          status: null,
+          advices: [
+            'Use a modern browser that supports Custom Elements (Edge, Chrome, Firefox, or Safari).',
+            'Check enterprise policies that may disable Custom Elements.'
+          ]
+        });
+      }
+      const ok = customElements.get('zero-md') !== undefined;
+      return new TestResult({
+        status: ok,
+        advices: ok ? [] : [
+          'Check firewall or proxy access to the CDN and ensure the response isn\'t blocked.',
+          'Whitelist the domain cdn.jsdelivr.net in your network settings.',
+          'Verify response CDN headers: Access-Control-Allow-Origin: *',
+          'Verify response CDN headers: Cross-Origin-Resource-Policy: cross-origin',
+          'Verify response CDN headers: Timing-Allow-Origin: *'
+        ]
+      });
+    }
+
+    async function testRdpWebSocket() {
+      let endpoints = [];
+      let testPassed = false;
+      try {
+        const response = await fetch('/api/get/rdp-connection');
+        if (!response.ok) {
+          throw new Error('Network response was not ok from /api/get/rdp-connection');
+        }
+        endpoints = (await response.json()).endpoints;
+        if (!Array.isArray(endpoints)) {
+          throw new Error('Invalid Response from /api/get/rdp-connection');
+        }
+
+        if(endpoints.length === 0) {
+          console.warn('No RDP WebSocket endpoints available to test. This can be normal, if RDP integration is not enabled.');
+          return new TestResult({
+            status: null,
+            advices: []
+          });
+        }
+
+        if (typeof WebSocket === 'undefined') {
+          return new TestResult({
+            status: null,
+            advices: [
+              'Use a modern browser with WebSocket support (Edge, Chrome, Firefox, or Safari).',
+              'Check enterprise policies or extensions that disable WebSockets.'
+            ]
+          });
+        }
+
+        const url = endpoints[Math.floor(Math.random() * endpoints.length)];
+
+        testPassed = await new Promise((resolve) => {
+          const ws = new WebSocket(url);
+          let received = false;
+          const timeoutId = setTimeout(() => {
+            if (!received) {
+              try { ws.close(); } catch { /* noop */ }
+              resolve(false);
+            }
+          }, 40000);
+
+          const cleanup = (result) => {
+            if (received) return;
+            received = true;
+            clearTimeout(timeoutId);
+            try { ws.close(); } catch { /* noop */ }
+            resolve(result);
+          };
+
+          ws.onopen = () => {
+            const connectPayload = {
+              type: 'connect',
+              host: 'sdafasfgadfgdfsgdfsg.gdsfgsdfger.sadfga',
+              port: 1234,
+              username: 'fgsdfg',
+              password: 'gsdfgddfgdsfg',
+              width: 1024,
+              height: 768
+            };
+            ws.send(JSON.stringify(connectPayload));
+          };
+
+          ws.onmessage = () => cleanup(true);
+          ws.onerror = () => cleanup(false);
+          ws.onclose = () => {
+            if (!received) cleanup(false);
+          };
+        });
+      } catch (error) {
+        console.error('Error during RDP WebSocket test:', error);
+        return new TestResult({
+          status: false,
+          advices: [
+            'Check the browser console for errors.',
+            'Check Firewall or proxy settings that may block connections.'
+          ]
+        });
+      }
+
+      return new TestResult({
+        status: testPassed,
+        advices: testPassed ? [] : [
+          'Check the browser console for errors.',
+          'Check Firewall or proxy settings that may block connections.',
+          'Ensure the following endpoints are reachable from your network: ' + endpoints.join(', ')
+        ]
+      });
+    }
+
+    async function runAllTests() {
+      const progressUi = createProgressBar();
+      const list = createResultsList();
+
+      const tests = [
+        {
+           name: 'Cross-origin isolation',
+           run: testCrossOriginIsolation
+        },
+        {
+           name: 'SharedArrayBuffer availability',
+           run: testSharedArrayBuffer
+        },
+        {
+           name: 'WebAssembly availability',
+           run: testWebAssembly
+        },
+        {
+           name: 'zero-md module loaded',
+           run: testZeroMdModule
+        },
+        {
+           name: 'RDP WebSocket response',
+           run: testRdpWebSocket
+        }
+      ];
+
+      let completedCount = 0;
+      const runners = tests.map(async (test) => {
+        const rowUi = addTestRow(list, test.name);
+        setStatus(rowUi.statusSpan, 'running');
+        setAdvice(rowUi.adviceDiv, '');
+        // random sleep 1 - 10 seconds to simulate test duration
+        // await new Promise((resolve) => setTimeout(resolve, Math.random() * 9000 + 1000));
+
+        let result;
+        try {
+          result = await test.run();
+        } catch (error) {
+          console.error(`Test failed: ${test.name}`, error);
+          result = new TestResult({ status: false, advices: ['Unexpected error occurred.'] });
+        }
+
+        if (result && result.status === true) {
+          setStatus(rowUi.statusSpan, 'passed');
+        } else if (result && result.status === false) {
+          setStatus(rowUi.statusSpan, 'failed');
+        } else {
+          setStatus(rowUi.statusSpan, 'not-applicable');
+        }
+
+        setAdvice(rowUi.adviceDiv, result?.advices || []);
+        completedCount += 1;
+        updateProgress(progressUi, completedCount, tests.length);
+        return result?.status;
+      });
+
+      const results = await Promise.all(runners);
+      const total = results.length;
+      const passedCount = results.filter((status) => status !== false).length;
+      const allPassed = passedCount === total;
+      const bannerClass = allPassed ? 'success' : 'warning';
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        `<div class="completion-banner ${bannerClass}">All tests completed. Passed ${passedCount} of ${total} tests.</div>`
+      );
+    }
+
+    runAllTests().catch((error) => {
+      console.error('Error running tests:', error);
+      document.body.insertAdjacentHTML('beforeend', '<div class="completion-banner warning">All tests completed. Passed 0 of 0 tests.</div>');
+    });
+    
+
+  </script>
+</body>
+</html>

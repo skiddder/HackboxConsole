@@ -12,6 +12,13 @@ app.secret_key = os.getenv("HACKBOX_SECRET_KEY", "superSecretHackboxKey")
 app.config['SESSION_TYPE'] = 'filesystem'
 
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
+
+
 
 
 class HackBoxUser(UserMixin):

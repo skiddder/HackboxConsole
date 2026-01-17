@@ -574,6 +574,19 @@ def api_set_tenants_settings():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route("/api/get/rdp-connection", methods=["GET"])
+def api_get_rdp_connection():
+    raw_rdp_endpoints = os.getenv("HACKBOX_RDP_WEBSOCKET_ENDPOINTS", "")
+    endpoints = [ep.strip() for ep in raw_rdp_endpoints.split(",") if ep and ep.strip()]
+    if len(endpoints) == 0:
+        return jsonify({"endpoints": []}), 200
+    if not isinstance(current_user, HackBoxUser):
+        return jsonify({"endpoints": []}), 200
+    if current_user.role not in ["coach", "hacker"]:
+        # todo retrieve rdp connections information for the current user
+        return jsonify({"endpoints": []}), 200
+    return jsonify({"endpoints": endpoints})
+
 #endregion -------- API ENDPOINTS --------
 
 #region -------- STATIC ENDPOINTS --------
