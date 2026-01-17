@@ -152,6 +152,26 @@
       justify-content: space-between;
       align-items: center;
     }
+    .zero-md-preview {
+      margin-top: 16px;
+      border: 1px dashed #e2e8f0;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .zero-md-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    zero-md#zero-md-test {
+      display: block;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px;
+    }
     @keyframes status-spin {
       to { transform: rotate(360deg); }
     }
@@ -217,6 +237,26 @@
       progressUi.label.innerHTML = `<span>Progress</span><span>${percent}%</span>`;
     }
 
+    function createZeroMdPreviewElement() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'zero-md-preview';
+      const title = document.createElement('div');
+      title.className = 'zero-md-title';
+      title.textContent = 'Markdown render preview (zero-md)';
+
+      const zeroMd = document.createElement('zero-md');
+      zeroMd.id = 'zero-md-test';
+
+      const template = document.createElement('script');
+      template.type = 'text/markdown';
+      template.innerHTML = "**Zero-MD Render OK**\nIf you can read this, the component rendered correctly.\n```javascript\nconsole.log('zero-md loaded');\n```";
+      zeroMd.appendChild(template);
+
+      wrapper.appendChild(title);
+      wrapper.appendChild(zeroMd);
+      return wrapper;
+    }
+
     function addTestRow(list, name) {
       const card = document.createElement('div');
       const header = document.createElement('div');
@@ -241,7 +281,7 @@
       card.appendChild(adviceDiv);
       list.appendChild(card);
 
-      return { statusSpan, adviceDiv };
+      return { card, statusSpan, adviceDiv };
     }
 
     function setStatus(cell, status) {
@@ -298,7 +338,9 @@
     }
 
     async function testZeroMdModule() {
+      let i = 0;
       if (typeof customElements === 'undefined') {
+        console.error('Custom Elements not supported in this browser');
         return new TestResult({
           status: null,
           advices: [
@@ -307,16 +349,67 @@
           ]
         });
       }
-      const ok = customElements.get('zero-md') !== undefined;
+
+      let customElOk = customElements.get('zero-md') !== undefined;
+      i = 0;
+      while(!customElOk && i < 10) {
+        i++;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        customElOk = customElements.get('zero-md') !== undefined;
+      }
+      if (!customElOk) {
+        console.error('zero-md custom element not registered');
+        return new TestResult({
+          status: false,
+          advices: [
+            'Check firewall or proxy access to the CDN and ensure the response isn\'t blocked.',
+            'Whitelist the domain cdn.jsdelivr.net in your network settings.',
+            'Verify response CDN headers: Access-Control-Allow-Origin: *',
+            'Verify response CDN headers: Cross-Origin-Resource-Policy: cross-origin',
+            'Verify response CDN headers: Timing-Allow-Origin: *'
+          ]
+        });
+      }
+
+      const testElement = document.getElementById('zero-md-test');
+      if (!testElement) {
+        console.error('zero-md test element not found');
+        return new TestResult({
+          status: false,
+          advices:  [
+            'Check firewall or proxy access to the CDN and ensure the response isn\'t blocked.',
+            'Whitelist the domain cdn.jsdelivr.net in your network settings.',
+            'Verify response CDN headers: Access-Control-Allow-Origin: *',
+            'Verify response CDN headers: Cross-Origin-Resource-Policy: cross-origin',
+            'Verify response CDN headers: Timing-Allow-Origin: *'
+          ]
+        });
+      }
+
+      let renderOk = false;
+      while(!renderOk && i < 10) {
+        i++;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        const root = testElement.shadowRoot;
+        const text = root ? (root.textContent || '') : '';
+        renderOk = root && text.includes('Zero-MD Render OK');
+      }
+
+      if (!renderOk) {
+        console.error('zero-md component did not render content');
+        return new TestResult({
+          status: false,
+          advices: [
+            'The zero-md component loaded but did not render content.',
+            'Check browser console for module load errors or CSP violations.',
+            'Ensure COOP/COEP headers are set for cross-origin isolation.'
+          ]
+        });
+      }
+
       return new TestResult({
-        status: ok,
-        advices: ok ? [] : [
-          'Check firewall or proxy access to the CDN and ensure the response isn\'t blocked.',
-          'Whitelist the domain cdn.jsdelivr.net in your network settings.',
-          'Verify response CDN headers: Access-Control-Allow-Origin: *',
-          'Verify response CDN headers: Cross-Origin-Resource-Policy: cross-origin',
-          'Verify response CDN headers: Timing-Allow-Origin: *'
-        ]
+        status: true,
+        advices: []
       });
     }
 
@@ -443,6 +536,9 @@
         const rowUi = addTestRow(list, test.name);
         setStatus(rowUi.statusSpan, 'running');
         setAdvice(rowUi.adviceDiv, '');
+        if (test.name === 'zero-md module loaded') {
+          rowUi.card.appendChild(createZeroMdPreviewElement());
+        }
         // random sleep 1 - 10 seconds to simulate test duration
         // await new Promise((resolve) => setTimeout(resolve, Math.random() * 9000 + 1000));
 
