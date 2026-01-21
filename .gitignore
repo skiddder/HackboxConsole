@@ -9,6 +9,8 @@ env
 /hack_console/challenges/**/*
 /hack_console/solutions/*
 /hack_console/solutions/**/*
+/hack_console/static/freerdp-web/*
+/hack_console/static/hackbox-web/**/*
 /users.json
 /iac/hack_console.zip
 /timings.csv
@@ -16,3 +18,4 @@ env
 /users-coaches.csv
 /notes.md
 /createdEntraIdUserSettings.json
+/freerdp-web.zip

@@ -14,9 +14,21 @@ param (
     [securestring]$coachPassword = $null,
 
     [switch]$doNotCopyChallengesOrSolutions,
-    [switch]$doNotCleanUp
-)
+    [switch]$doNotCleanUp,
 
+
+    # RDP Integration
+    [switch]$deployRdpIntegration,
+    [string]$rdpResourceGroupName = "HackConsole-RDP",
+    [string]$rdpAcrName = $null,
+    [ValidateSet('0.5Gi', '1.0Gi', '1.5Gi', '2.0Gi', '2.5Gi', '3.0Gi', '3.5Gi', '4.0Gi', '6.0Gi', '8.0Gi')]
+    [string]$rdpContainerMemory = '4.0Gi',
+    [int]$rdpConcurrentRequests = 20,
+    [int]$rdpMinReplicas = 1,
+    [int]$rdpMaxReplicas = 10,
+
+    [switch]$deployRdpVms
+)
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $consoleRoot = Split-Path -Parent $scriptPath
@@ -28,6 +40,9 @@ Import-Module Az.Accounts
 Import-Module Az.Websites
 Import-Module Az.Resources
 
+# use the following Git Tag
+$rdpGitTag = "v3.6.1"
+$branchHash = ""
 
 
 if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
@@ -104,10 +119,74 @@ if($challengeMdFileCount -ne $solutionMdFileCount) {
 Write-Host "Removing all __pycache__ directories"
 Get-ChildItem -Path (Join-Path $consoleRoot "hack_console") -Recurse -Directory -Filter "__pycache__" | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
 
+# Deploy RDP Backend if requested
+if($deployRdpIntegration) {
+    if($branchHash -eq "") {
+        $branchHash = (git ls-remote --tags https://github.com/qxsch/freerdp-web.git $rdpGitTag).Split("`t")[0]
+    }
+    if($branchHash -eq "") {
+        throw "Could not find RDP Git Tag $rdpGitTag"
+    }
+    Write-Host "Creating the RDP Backend infrastructure - Using RDP branch $rdpGitTag with hash $branchHash"
+
+    if(-not (Get-AzResourceGroup -Name $rdpResourceGroupName -ErrorAction SilentlyContinue)) {
+        Write-Host -ForegroundColor "Yellow" "Creating Resource Group $rdpResourceGroupName"
+        if($null -eq $location -or $location -eq "") {
+            New-AzResourceGroup -Name $rdpResourceGroupName -Location "Sweden Central" | Out-Null
+        }
+        else {
+            New-AzResourceGroup -Name $rdpResourceGroupName -Location $location | Out-Null
+        }
+    }
+
+    $rdpParams = @{
+        TemplateFile = (Join-Path $scriptPath "bicep" "deployment-rdp.bicep")
+        ResourceGroupName = $rdpResourceGroupName
+        containerMemory = $rdpContainerMemory
+        concurrentRequests = $rdpConcurrentRequests
+        minReplicas = $rdpMinReplicas
+        maxReplicas = $rdpMaxReplicas
+    }
+    if(-not($null -eq $location -or $location -eq "")) {
+        $rdpParams["location"] = $location
+    }
+    if(-not($null -eq $rdpAcrName -or $rdpAcrName -eq "")) {
+        $rdpParams["acrName"] = $rdpAcrName
+    }
+    $rdpDeployment = New-AzResourceGroupDeployment @rdpParams -Name "rdpbackend"  -ErrorAction Continue -ErrorVariable +evx
+    if($null -eq $rdpDeployment) {
+        foreach($ev in $evx) {
+            if($ev.Exception.Message.Contains('soft-deleted')) {
+                Write-Host -ForegroundColor Yellow "Soft deleted resource found:`n$($ev.Exception.Message)"
+            }
+            elseif($ev.Exception.Message.Contains('quota')) {
+                Write-Host -ForegroundColor Yellow "Quota exceeded:`n$($ev.Exception.Message)"
+            }
+        }
+        throw "RDP Backend Deployment failed"
+    }
+
+
+    Write-Host "RDP Backend Deployment completed"
+    Write-Host ( "  - RDP Backend URL:      " + $rdpDeployment.Outputs.containerAppUrl.Value )
+    Write-Host ( "  - VM Subnet ID:         " + $rdpDeployment.Outputs.vmSubnetId.Value )
+}
+
+
+if(-not (Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue)) {
+    Write-Host -ForegroundColor "Yellow" "Creating Resource Group $ResourceGroupName"
+    if($null -eq $location -or $location -eq "") {
+        New-AzResourceGroup -Name $ResourceGroupName -Location "Sweden Central" | Out-Null
+    }
+    else {
+        New-AzResourceGroup -Name $ResourceGroupName -Location $location | Out-Null
+    }
+}
+
 # run the bicep deployment
 Write-Host ( "Deploying the hacker console to Resource Group $ResourceGroupName (Subscription: " + ((Get-AzContext).Subscription.Id) + ")" )
 $params = @{
-    TemplateFile = (Join-Path $scriptPath "deployment.bicep")
+    TemplateFile = (Join-Path $scriptPath "bicep" "deployment.bicep")
     ResourceGroupName = $ResourceGroupName
     hackerUsername = $hackerUsername
     hackerPassword = $hackerPassword
@@ -137,15 +216,38 @@ if($null -eq $deployment) {
             Write-Host -ForegroundColor Yellow "Quota exceeded:`n$($ev.Exception.Message)"
         }
     }
-    throw "Deployment failed"
+    throw "Hackbox Console Deployment failed"
 }
 
 
-Write-Host "Deployment completed"
+Write-Host "Hackbox Console Deployment completed"
 Write-Host ( "  - Web App Name:         " + $deployment.Outputs.webAppName.Value )
 Write-Host ( "  - Web App URL:          https://" + $deployment.Outputs.webAppUrl.Value )
 Write-Host ( "  - Storage Account Name: " + $deployment.Outputs.storageAccountName.Value )
 
+
+
+# always start with a clean RDP integration directory
+$rdpExtractedPath = Join-Path $consoleRoot "hack_console" "static" "freerdp-web"
+if(Test-Path -Path $rdpExtractedPath) {
+    Remove-Item -Path $rdpExtractedPath -Recurse -Force | Out-Null
+}
+# Integrating RDP Web Client if requested
+if($deployRdpIntegration) {
+    Write-Host "Creating  RDP Integration Frontend files - Using RDP Git Release $rdpGitTag"
+    $rdpZipPath = Join-Path $consoleRoot "freerdp-web.zip"
+    Invoke-WebRequest -Uri "https://github.com/qxsch/freerdp-web/releases/download/$rdpGitTag/frontendbuild.zip" -OutFile $rdpZipPath
+
+    # create directory
+    New-Item -ItemType Directory -Path $rdpExtractedPath | Out-Null
+
+    # extract the zip file
+    Expand-Archive -Path $rdpZipPath -DestinationPath $rdpExtractedPath -Force
+    # remove the zip file
+    Remove-Item -Path $rdpZipPath -Force | Out-Null
+    # remove index.html if it exists
+    Remove-Item -Path (Join-Path $rdpExtractedPath "index.html") -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+}
 
 
 # deploying the zip package
@@ -178,6 +280,10 @@ if(-not $doNotCleanUp) {
         New-Item -Path (Join-Path $consoleRoot "hack_console" "solutions" ".gitkeep") -ItemType File | Out-Null
     }
 }
+
+
+
+
 
 
 Write-Host -ForegroundColor Green ( "URL:  https://" + $deployment.Outputs.webAppUrl.Value )

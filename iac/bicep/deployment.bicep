@@ -45,32 +45,33 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
         '10.0.0.0/24'
       ]
     }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-          delegations: [
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverFarms'
-              }
-            }
-          ]
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.Storage'
-              locations: [
-                location
-              ]
-            }
+  }
+}
+// add the subnet
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+    name: 'default'
+    parent: vnet
+    properties: {
+      addressPrefix: '10.0.0.0/24'
+      delegations: [
+        {
+          name: 'delegation'
+          properties: {
+            serviceName: 'Microsoft.Web/serverFarms'
+          }
+        }
+      ]
+      serviceEndpoints: [
+        {
+          service: 'Microsoft.Storage'
+          locations: [
+            location
           ]
         }
-      }
-    ]
-  }
-}       
+      ]
+    }
+}
+
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: storageAccountName
@@ -85,7 +86,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
       bypass: 'AzureServices'
       virtualNetworkRules: [
         {
-          id: '${vnet.id}/subnets/default'
+          id: subnet.id
           action: 'Allow'
         }
       ]
@@ -127,7 +128,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   properties: {
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: vnet.properties.subnets[0].id
+    virtualNetworkSubnetId: subnet.id
     vnetRouteAllEnabled: true
     httpsOnly: true
     siteConfig: {
