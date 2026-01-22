@@ -15,7 +15,7 @@
 		{% endblock %}
 	</head>
 	<body>
-		<header class="top-bar" role="banner">
+		<header class="top-bar visible" role="banner">
 			<div class="brand" tabindex="0">
                 <span class="logo-shape" aria-hidden="true">
                 <svg viewBox="0 0 64 64" width="34" height="34" stroke-linecap="round" stroke-linejoin="round">
@@ -47,6 +47,7 @@
 			</div>
 		</header>
 
+		<div class="main-content-wrapper">
 		{% if toolbarname %}
 		<div id="{{ toolbarname }}Toolbar" class="challenge-toolbar" aria-label="{{ toolbarname }} controls">
 			{% block toolbar %}
@@ -60,8 +61,41 @@
 				{% endblock %}
 			</section>
 		</main>
+		</div>
 
 		{% block bottomloadscript %}
 		{% endblock %}
+
+		<script>
+		(function() {
+			const topBar = document.querySelector('.top-bar');
+			let lastScrollY = 0;
+			let isVisible = true;
+			const threshold = 10;
+
+			window.addEventListener('scroll', function() {
+				const currentScrollY = window.scrollY;
+				const delta = currentScrollY - lastScrollY;
+
+				if (Math.abs(delta) < threshold) return;
+
+				if (delta < 0 || currentScrollY <= 60) {
+					// Scrolling up OR at top - show header
+					if (!isVisible) {
+						topBar.classList.add('visible');
+						isVisible = true;
+					}
+				} else if (delta > 0 && currentScrollY > 60) {
+					// Scrolling down & past threshold - hide header
+					if (isVisible) {
+						topBar.classList.remove('visible');
+						isVisible = false;
+					}
+				}
+
+				lastScrollY = currentScrollY;
+			});
+		})();
+		</script>
 	</body>
 </html>
