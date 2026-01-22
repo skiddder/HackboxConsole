@@ -390,9 +390,9 @@ export class MdManager {
         // table header
         let headerRow = document.createElement("tr");
         let th1 = document.createElement("th");
-        th1.innerText = "Credential Type";
+        th1.innerText = "Name";
         let th2 = document.createElement("th");
-        th2.innerText = "Value";
+        th2.innerText = "Credential";
         headerRow.appendChild(th1);
         headerRow.appendChild(th2);
         thead.appendChild(headerRow);
