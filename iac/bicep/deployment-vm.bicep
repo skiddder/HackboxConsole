@@ -19,7 +19,7 @@ param virtualNetworkSubnetId string
 param location string = resourceGroup().location
 
 @description('Size of the virtual machine')
-param virtualMachineSize string = 'Standard_D4s_v5'
+param virtualMachineSize string = 'Standard_D4s_v4'
 
 @description('OS disk type')
 param osDiskType string = 'StandardSSD_LRS'

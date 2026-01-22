@@ -492,17 +492,11 @@ export class MdManager {
     }
 
     async getUnlockedStep() {
-        try {  
-            let data = await fetch("/api/get/challenge")
-                .then(response => response.json());
-            console.log("Current challenge", data);
-            if(data.challenge) {
-                return parseInt(data.challenge);
-            }
-        }
-        catch {
-            console.log("Error fetching current unlocked challenge");
-            return 1;
+        let data = await fetch("/api/get/challenge")
+            .then(response => response.json());
+        console.log("Current challenge", data);
+        if(data.challenge) {
+            return parseInt(data.challenge);
         }
         return 1;
     }
@@ -515,8 +509,8 @@ export class MdManager {
                 this.#challenges = await this.getChallenges();
                 console.log("Challenges", this.#challenges);
             }
-            catch {
-                console.log("Error fetching challenges");
+            catch(err) {
+                console.log("Error fetching challenges", err);
             }
             try {
                 let currentStep = await this.getUnlockedStep();
@@ -542,8 +536,8 @@ export class MdManager {
                     }
                 }
             }
-            catch {
-                console.log("Error fetching current challenge");
+            catch(err) {
+                console.log("Error fetching current challenge", err);
             }
             if(requiresRendering) {
                 this.#render();

@@ -43,8 +43,11 @@ Import-Module Az.Resources
 # use the following Git Tag
 $rdpGitTag = "v3.6.1"
 $branchHash = ""
-$rdpBackendUrls = ""
 
+# rdp vm deployment requires rdp integration
+if($deployRdpVms) {
+    $deployRdpIntegration = $true
+}
 
 if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
     Connect-AzAccount -UseDeviceAuthentication
@@ -60,6 +63,9 @@ if((-not (Get-Command bicep.exe -ErrorAction SilentlyContinue)) -and (-not (Get-
 if(-not (Test-Path (Join-Path $consoleRoot "users.json") -PathType Leaf)) {
     if($hackerUsername -eq "" -or $coachUsername -eq "" -or $hackerPassword -eq $null -or $coachPassword -eq $null) {
          throw "Either provide the users.json file or provide all four parameters: hackerUsername, hackerPassword, coachUsername, coachPassword"
+    }
+    if($deployRdpIntegration -or $deployRdpVms) {
+        throw "RDP Integration or RDP VM deployment requested, but users.json file is not present. Please provide the users.json file for RDP deployments."
     }
 }
 else {
@@ -121,6 +127,7 @@ Write-Host "Removing all __pycache__ directories"
 Get-ChildItem -Path (Join-Path $consoleRoot "hack_console") -Recurse -Directory -Filter "__pycache__" | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
 
 # Deploy RDP Backend if requested
+$rdpBackendUrls = ""  # default: no RDP backend
 if($deployRdpIntegration) {
     if($branchHash -eq "") {
         $branchHash = (git ls-remote --tags https://github.com/qxsch/freerdp-web.git $rdpGitTag).Split("`t")[0]
