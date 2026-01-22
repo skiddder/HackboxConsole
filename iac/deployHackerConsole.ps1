@@ -26,7 +26,7 @@ param (
     [int]$rdpConcurrentRequests = 20,
     [int]$rdpMinReplicas = 1,
     [int]$rdpMaxReplicas = 10,
-
+    # RDP VM Deployment
     [switch]$deployRdpVms
 )
 
@@ -43,6 +43,7 @@ Import-Module Az.Resources
 # use the following Git Tag
 $rdpGitTag = "v3.6.1"
 $branchHash = ""
+$rdpBackendUrls = ""
 
 
 if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
@@ -170,7 +171,10 @@ if($deployRdpIntegration) {
     Write-Host "RDP Backend Deployment completed"
     Write-Host ( "  - RDP Backend URL:      " + $rdpDeployment.Outputs.containerAppUrl.Value )
     Write-Host ( "  - VM Subnet ID:         " + $rdpDeployment.Outputs.vmSubnetId.Value )
+    # string contains comma-separated list of RDP Backend URLs
+    $rdpBackendUrls = $rdpDeployment.Outputs.containerAppUrl.Value
 }
+
 
 
 if(-not (Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue)) {
@@ -192,6 +196,7 @@ $params = @{
     hackerPassword = $hackerPassword
     coachUsername = $coachUsername
     coachPassword = $coachPassword
+    rdpBackendUrls = $rdpBackendUrls
 }
 if(-not($null -eq $location -or $location -eq "")) {
     $params["location"] = $location

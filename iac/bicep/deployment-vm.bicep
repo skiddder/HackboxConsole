@@ -22,10 +22,13 @@ param location string = resourceGroup().location
 param virtualMachineSize string = 'Standard_D4s_v5'
 
 @description('OS disk type')
-param osDiskType string = 'Premium_LRS'
+param osDiskType string = 'StandardSSD_LRS'
 
 @description('Use Windows 11 BYOL (Bring Your Own License)')
 param windowsByol bool = false
+
+@description('User that owns the VM')
+param vmOwnerTag string = ''
 
 // Network Interface
 resource networkInterface 'Microsoft.Network/networkInterfaces@2023-09-01' = {
@@ -51,6 +54,9 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2023-09-01' = {
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: virtualMachineName
   location: location
+  tags: {
+    HackboxVMOwner: vmOwnerTag
+  }
   properties: {
     hardwareProfile: {
       vmSize: virtualMachineSize

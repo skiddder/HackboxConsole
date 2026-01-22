@@ -28,6 +28,9 @@ param coachUsername string = 'coach' // The username for the coach
 @secure()
 param coachPassword string
 
+@description('comma-separated list of RDP Backend URLs')
+param rdpBackendUrls string = ''
+
 // variables
 var linuxFxVersion = 'PYTHON|3.12' // The runtime stack of web app
 var appServicePlanName = toLower('plan-${webAppName}')
@@ -159,6 +162,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'HACKBOX_COACH_PWD'
           value: coachPassword
+        }
+        {
+          name: 'HACKBOX_RDP_WEBSOCKET_ENDPOINTS'
+          value: rdpBackendUrls
         }
         {
           name:'SCM_DO_BUILD_DURING_DEPLOYMENT'

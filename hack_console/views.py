@@ -581,10 +581,16 @@ def api_get_rdp_connection():
     if len(endpoints) == 0:
         return jsonify({"endpoints": []}), 200
     if not isinstance(current_user, HackBoxUser):
-        return jsonify({"endpoints": []}), 200
+        return jsonify({"endpoints": endpoints }), 200
     if current_user.role not in ["coach", "hacker"]:
         # todo retrieve rdp connections information for the current user
-        return jsonify({"endpoints": []}), 200
+        rdpconnection = {
+            "user": None,
+            "pass": None,
+            "host": None,
+            "port": 3389
+        }
+        return jsonify({"endpoints": endpoints, "rdpconnection": rdpconnection}), 200
     return jsonify({"endpoints": endpoints})
 
 #endregion -------- API ENDPOINTS --------
