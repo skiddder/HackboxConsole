@@ -1,4 +1,5 @@
 import { Clicker } from './clicker.js';
+import { ToolTip } from './tooltip.js';
 
 export class MdManagerSettings {
     #navToPrevious = null;
@@ -210,6 +211,7 @@ export class MdManagerSettings {
     }
 }
 
+
 export class MdManager {
     #challenges = [];
     #currentStep = null;
@@ -223,6 +225,8 @@ export class MdManager {
     #elements = {};
     #allowedMdPaths = [];
     #mdEndpoints = {};
+    #tooltip = new ToolTip();
+
     constructor(settings) {
         if(settings === null || settings === undefined) {
             throw new Error("MdManagerSettings is required");
@@ -301,9 +305,7 @@ export class MdManager {
         }
     }
 
-    async #getSecret(group, name) {
-        group = String(group).toLowerCase();
-        name = String(name).toLowerCase();
+    async #loadAllSecrets() {
         // wait until refresh is done
         while(this.#chachedSecretsRefreshing) {
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -314,8 +316,8 @@ export class MdManager {
                 const secrets = await fetch('/api/show/credentials').then(response => response.json());
                 let d = {};
                 for (let i in secrets) {
-                    let g = secrets[i].group.toLowerCase();
-                    let n = secrets[i].name.toLowerCase();
+                    let g = String(secrets[i].group).toLowerCase();
+                    let n = String(secrets[i].name).toLowerCase();
                     d[`${g}|${n}`] = secrets[i];
                 }
                 this.#cachedSecrets = d;
@@ -323,6 +325,13 @@ export class MdManager {
                 this.#chachedSecretsRefreshing = false;
             }
         }
+    }
+
+    async #getSecret(group, name) {
+        group = String(group).toLowerCase();
+        name = String(name).toLowerCase();
+        // wait for secrets to be loaded
+        await this.#loadAllSecrets();
         return this.#cachedSecrets[`${group}|${name}`];
     }
 
@@ -331,10 +340,6 @@ export class MdManager {
         let currentUrl = new URL(window.location.href);
         console.log("Current URL", currentUrl);
         this.#elements.zeroMdElement.addEventListener('zero-md-rendered', function() {
-            // tooltip variables
-            let tooltip=null;
-            let tooltipTimeout=null;
-
             let mdBase = that.#elements.zeroMdElement.src.substring(0, that.#elements.zeroMdElement.src.lastIndexOf("/") + 1);
             console.log("configuring markdown links");
             let nodes = that.#elements.zeroMdElement.shadowRoot.querySelectorAll('a[href]');
@@ -365,94 +370,119 @@ export class MdManager {
                     }
                 }
             });
+            console.log("configuring secret groups");
+            that.#elements.zeroMdElement.shadowRoot.querySelectorAll('secretgroup').forEach(that.#renderSecretGroup.bind(that));
             console.log("configuring secrets");
-            that.#elements.zeroMdElement.shadowRoot.querySelectorAll('secret').forEach(async function(secretElem) {
-                let group = secretElem.getAttribute("group") ? secretElem.getAttribute("group") : "Default";
-                let name = secretElem.getAttribute("name");
-                let show = secretElem.getAttribute("show") ? secretElem.getAttribute("show").toLowerCase() : "false";
-                if(show !== "true" && show !== "false" && show !== "alwayshidden") {
-                    show = "false";
-                }
+            that.#elements.zeroMdElement.shadowRoot.querySelectorAll('secret').forEach(that.#renderSecret.bind(that));
+        });
+    }
 
-                let secret = await that.#getSecret(group, name);
-                let secretValue = secret ? String(secret.Credential) : "undefined";
+    async #renderSecretGroup(secretGroupElem) {
+        // <secretgroup group="azure" show="true|false|alwayshidden" text="Login Information for the Lab Environment" />
+        let group = secretGroupElem.getAttribute("group") ? secretGroupElem.getAttribute("group") : "Default";
+        let show = secretGroupElem.getAttribute("show") ? secretGroupElem.getAttribute("show").toLowerCase() : "false";
+        // replace the elemt with a div
+        let tbl = document.createElement("table");
+        let thead = document.createElement("thead");
+        tbl.appendChild(thead);
+        let tbody = document.createElement("tbody");
+        tbl.appendChild(tbody);
+        // table header
+        let headerRow = document.createElement("tr");
+        let th1 = document.createElement("th");
+        th1.innerText = "Credential Type";
+        let th2 = document.createElement("th");
+        th2.innerText = "Value";
+        headerRow.appendChild(th1);
+        headerRow.appendChild(th2);
+        thead.appendChild(headerRow);
+        // wait for secrets to be loaded
+        await this.#loadAllSecrets();
+        for(const k of Object.keys(this.#cachedSecrets)) {
+            const secretInfo = this.#cachedSecrets[k];
+            if(String(secretInfo.group).toLowerCase() === String(group).toLowerCase()) {
+                // create a row for the secret
+                let tr = document.createElement("tr");
+                let td1 = document.createElement("td");
+                td1.innerText = secretInfo.name;
+                let td2 = document.createElement("td");
+                let secretEl = document.createElement("secret");
+                secretEl.setAttribute("group", group);
+                secretEl.setAttribute("name", secretInfo.name);
+                secretEl.setAttribute("show", show);
+                td2.appendChild(secretEl);
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tbody.appendChild(tr);
+            }
+        }
+
+        secretGroupElem.parentElement.replaceChild(tbl, secretGroupElem);
+        // also render secrets inside the table
+        tbl.querySelectorAll('secret').forEach(this.#renderSecret.bind(this));
+    }
+
+    async #renderSecret(secretElem) {
+        if(!(secretElem instanceof HTMLElement)) {
+            return;
+        }
+        let that = this;
+        // <secret group="groupname" name="secretname" show="true|false|alwayshidden" />
+        let group = secretElem.getAttribute("group") ? secretElem.getAttribute("group") : "Default";
+        let name = secretElem.getAttribute("name");
+        let show = secretElem.getAttribute("show") ? secretElem.getAttribute("show").toLowerCase() : "false";
+        if(show !== "true" && show !== "false" && show !== "alwayshidden") {
+            show = "false";
+        }
+
+        let secret = await this.#getSecret(group, name);
+        let secretValue = secret ? String(secret.Credential) : "undefined";
 
 
-                // replace secret element with span
-                let span = document.createElement("span");
-                span.classList.add("secret");
-                span.title = 'Double click to copy credential.';
-                if(show === "true") {
+        // replace secret element with span
+        let span = document.createElement("span");
+        span.classList.add("secret");
+        span.title = 'Double click to copy credential.';
+        if(show === "true") {
+            span.innerText = '📑 ' + secretValue;
+        }
+        else {
+            span.classList.add('hidden');
+            span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+        }
+        secretElem.parentElement.replaceChild(span, secretElem);
+        let clicker = new Clicker(span);
+        if(show !== "alwayshidden") {
+            clicker.onSingleClick(function(event) {
+                if(span.classList.contains('hidden')) {
+                    span.classList.remove('hidden');
                     span.innerText = '📑 ' + secretValue;
                 }
                 else {
                     span.classList.add('hidden');
                     span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
-                }
-                secretElem.parentElement.replaceChild(span, secretElem);
-                let clicker = new Clicker(span);
-                if(show !== "alwayshidden") {
-                    clicker.onSingleClick(function(event) {
-                        if(span.classList.contains('hidden')) {
-                            span.classList.remove('hidden');
-                            span.innerText = '📑 ' + secretValue;
-                        }
-                        else {
-                            span.classList.add('hidden');
-                            span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
-                        } 
-                    });
-                }
-                clicker.onDoubleClick(function(event) {
-                    if(tooltipTimeout) {
-                        clearTimeout(tooltipTimeout);
-                        tooltipTimeout = null;
-                    }
-                    if(tooltip) {
-                        tooltip.remove();
-                        tooltip = null;
-                    }
-                    navigator.clipboard.writeText(secretValue);
-
-                    // add fading tooltip
-                    tooltip = document.createElement('div');
-                    tooltip.classList.add('credentialtooltip');
-                    tooltip.innerText = '📑 Copied!';
-                    document.body.appendChild(tooltip);
-
-                    // add to mouse position
-                    tooltip.style.position = 'absolute';
-                    tooltip.style.left = (event.pageX + 10) + 'px';
-                    tooltip.style.top = (event.pageY + 10) + 'px';
-                    // and ensure it is not off screen
-                    const tooltipRect = tooltip.getBoundingClientRect();
-                    if(tooltipRect.right > window.innerWidth) {
-                        tooltip.style.left = (window.innerWidth - tooltipRect.width - 10) + 'px';
-                    }
-                    if(tooltipRect.bottom > window.innerHeight) {
-                        tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
-                    }
-                    tooltipTimeout = setTimeout(() => {
-                        tooltip.remove();
-                        // set credential to initial state
-                        if(show === "true") {
-                            if(span.classList.contains('hidden')) {
-                                span.classList.remove('hidden');
-                            }
-                            span.innerText = '📑 ' + secretValue;
-                        }
-                        else {
-                            if(!span.classList.contains('hidden')) {
-                                span.classList.add('hidden');
-                            }
-                            span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
-                        }
-                        tooltip = null;
-                        tooltipTimeout = null;
-                    }, 1200);
-                });
+                } 
             });
-
+        }
+        clicker.onDoubleClick(function(event) {
+            navigator.clipboard.writeText(secretValue);
+            // show tooltip
+            that.#tooltip.show('📑 Copied!', 1200, event);
+            that.#tooltip.onHideOnce(() => {
+                // set credential to initial state
+                if(show === "true") {
+                    if(span.classList.contains('hidden')) {
+                        span.classList.remove('hidden');
+                    }
+                    span.innerText = '📑 ' + secretValue;
+                }
+                else {
+                    if(!span.classList.contains('hidden')) {
+                        span.classList.add('hidden');
+                    }
+                    span.innerText = '📑 ' + '••••••••' + '•'.repeat(Math.max(secretValue.length - 8, 0));
+                }
+            });
         });
     }
 

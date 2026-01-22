@@ -1,10 +1,10 @@
 import { Clicker } from './clicker.js';
+import { ToolTip } from './tooltip.js';
 
 // one off loader
 (async function() {
     // tooltip variables
-    let tooltip=null;
-    let tooltipTimeout=null;
+    let tooltip = new ToolTip(1200);
 
     let creds = await fetch('/api/show/credentials').then(response => response.json());
     const rootEl = document.getElementById('credentials');
@@ -64,43 +64,15 @@ import { Clicker } from './clicker.js';
             });
             // double click to copy
             clicker.onDoubleClick(function(event) {
-                if(tooltipTimeout) {
-                    clearTimeout(tooltipTimeout);
-                    tooltipTimeout = null;
-                }
-                if(tooltip) {
-                    tooltip.remove();
-                    tooltip = null;
-                }
                 navigator.clipboard.writeText(td2.dataset.Credential);
-                // add fading tooltip
-                tooltip = document.createElement('div');
-                tooltip.classList.add('credentialtooltip');
-                tooltip.innerText = '📑 Copied!';
-                document.body.appendChild(tooltip);
-
-                // add to mouse position
-                tooltip.style.position = 'absolute';
-                tooltip.style.left = (event.pageX + 10) + 'px';
-                tooltip.style.top = (event.pageY + 10) + 'px';
-                // and ensure it is not off screen
-                const tooltipRect = tooltip.getBoundingClientRect();
-                if(tooltipRect.right > window.innerWidth) {
-                    tooltip.style.left = (window.innerWidth - tooltipRect.width - 10) + 'px';
-                }
-                if(tooltipRect.bottom > window.innerHeight) {
-                    tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
-                }
-                tooltipTimeout = setTimeout(() => {
-                    tooltip.remove();
-                    // hide credential
+                tooltip.show('📑 Copied!', 1200, event);
+                tooltip.onHideOnce(() => {
+                    // hid credential
                     if(!td2.classList.contains('hidden')) {
                         td2.classList.add('hidden');
                         td2.innerText = '••••••••' + '•'.repeat(Math.max(cred.Credential.length - 8, 0));
                     }
-                    tooltip = null;
-                    tooltipTimeout = null;
-                }, 1200);
+                });
             });
             tr.appendChild(td2);
 

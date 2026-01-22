@@ -282,7 +282,7 @@ table.generic td.credential:not(.hidden), .credentials td.credential:not(.hidden
   }
 }
 
-div.credentialtooltip {
+div.tooltip {
   position:absolute;
   transform:translateX(-50%) translateY(-8px);
   background:rgba(0,0,0,.75);
@@ -291,6 +291,7 @@ div.credentialtooltip {
   border-radius:var(--radius-sm);
   font-size:.75rem;
   white-space:nowrap;
+  z-index: 2000;
 }
 
 
