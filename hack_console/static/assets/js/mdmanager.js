@@ -443,6 +443,9 @@ export class MdManager {
         let span = document.createElement("span");
         span.classList.add("secret");
         span.title = 'Double click to copy credential.';
+        if(secret.note) {
+            span.title += ' (Note: ' + secret.note + ')';
+        }
         if(show === "true") {
             span.innerText = '📑 ' + secretValue;
         }
