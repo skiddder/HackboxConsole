@@ -70,10 +70,204 @@ begin {
         Start-Sleep -Seconds 10
     }
 
-    Write-Host "Preparing storage context"
-    $storageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $storageAccountName).Value[0]
-    $script:context = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageAccountKey
-    $script:table = Get-AzStorageTable -Name 'credentials' -Context $script:context
+    # Helper function to get access token as plain string
+    function Get-PlainAccessToken {
+        param([string]$ResourceUrl, [string]$TenantId)
+        
+        $params = @{
+            ResourceUrl = $ResourceUrl
+            ErrorAction = 'Stop'
+        }
+        if ($TenantId) { $params.TenantId = $TenantId }
+        
+        $tokenResult = Get-AzAccessToken @params
+        $token = $tokenResult.Token
+        
+        # Convert SecureString to plain text if needed
+        if ($token -is [System.Security.SecureString]) {
+            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($token)
+            try {
+                $token = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+            }
+            finally {
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+            }
+        }
+        
+        return @{
+            Token = $token
+            ExpiresOn = $tokenResult.ExpiresOn
+        }
+    }
+
+    # Helper function to create SharedKey authorization header for storage account key auth
+    function Get-SharedKeyAuthHeader {
+        param(
+            [string]$StorageAccountName,
+            [string]$StorageAccountKey,
+            [string]$Method,
+            [string]$Resource,
+            [string]$ContentType,
+            [string]$Date
+        )
+        
+        # SharedKeyLite for Table service: StringToSign = Date + "\n" + CanonicalizedResource
+        $stringToSign = "$Date`n/$StorageAccountName/$Resource"
+        
+        # Create HMAC-SHA256 signature
+        $keyBytes = [Convert]::FromBase64String($StorageAccountKey)
+        $hmac = New-Object System.Security.Cryptography.HMACSHA256
+        $hmac.Key = $keyBytes
+        $signatureBytes = $hmac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($stringToSign))
+        $signature = [Convert]::ToBase64String($signatureBytes)
+        
+        return "SharedKeyLite $StorageAccountName`:$signature"
+    }
+
+    # Helper function to write entity using REST API (works with both auth methods)
+    function Write-TableEntityRest {
+        param(
+            [string]$StorageAccountName,
+            [string]$TableName,
+            [string]$PartitionKey,
+            [string]$RowKey,
+            [hashtable]$Properties,
+            [string]$StorageAccountKey = $null  # If provided, use SharedKey; otherwise use OAuth
+        )
+        
+        $tableUrl = "https://$StorageAccountName.table.core.windows.net/$TableName"
+        
+        # Build entity body
+        $entity = @{
+            PartitionKey = $PartitionKey
+            RowKey = $RowKey
+        }
+        foreach ($key in $Properties.Keys) {
+            $entity[$key] = $Properties[$key]
+        }
+        $body = $entity | ConvertTo-Json -Compress
+        
+        $dateString = [DateTime]::UtcNow.ToString("R")
+        $contentType = "application/json"
+        
+        # Build headers based on auth method
+        if ($StorageAccountKey) {
+            # Use SharedKey authentication
+            $resource = "$TableName(PartitionKey='$([Uri]::EscapeDataString($PartitionKey))',RowKey='$([Uri]::EscapeDataString($RowKey))')"
+            $authHeader = Get-SharedKeyAuthHeader -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Method "PUT" -Resource $resource -ContentType $contentType -Date $dateString
+            
+            $headers = @{
+                "Authorization" = $authHeader
+                "Content-Type" = $contentType
+                "Accept" = "application/json;odata=nometadata"
+                "x-ms-version" = "2020-12-06"
+                "x-ms-date" = $dateString
+                "DataServiceVersion" = "3.0;NetFx"
+                "Prefer" = "return-no-content"
+            }
+        }
+        else {
+            # Use OAuth authentication
+            $azContext = Get-AzContext
+            $tokenInfo = Get-PlainAccessToken -ResourceUrl "https://storage.azure.com" -TenantId $azContext.Tenant.Id
+            $token = $tokenInfo.Token
+            
+            $headers = @{
+                "Authorization" = "Bearer $token"
+                "Content-Type" = $contentType
+                "Accept" = "application/json;odata=nometadata"
+                "x-ms-version" = "2020-12-06"
+                "x-ms-date" = $dateString
+                "DataServiceVersion" = "3.0;NetFx"
+                "Prefer" = "return-no-content"
+            }
+        }
+        
+        # Use PUT for InsertOrReplace
+        $entityUrl = "$tableUrl(PartitionKey='$([Uri]::EscapeDataString($PartitionKey))',RowKey='$([Uri]::EscapeDataString($RowKey))')"
+        
+        $response = Invoke-RestMethod -Uri $entityUrl -Method Put -Headers $headers -Body $body -StatusCodeVariable statusCode -ErrorAction Stop
+        return $statusCode
+    }
+
+    # Helper function to test REST API table access (works with both auth methods)
+    function Test-TableConnectionRest {
+        param(
+            [string]$StorageAccountName,
+            [string]$TableName,
+            [string]$StorageAccountKey = $null  # If provided, use SharedKey; otherwise use OAuth
+        )
+        try {
+            $tableUrl = "https://$StorageAccountName.table.core.windows.net/$TableName()"
+            $dateString = [DateTime]::UtcNow.ToString("R")
+            
+            if ($StorageAccountKey) {
+                # Use SharedKey authentication
+                $resource = "$TableName()"
+                $authHeader = Get-SharedKeyAuthHeader -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Method "GET" -Resource $resource -ContentType "" -Date $dateString
+                
+                $headers = @{
+                    "Authorization" = $authHeader
+                    "Accept" = "application/json;odata=nometadata"
+                    "x-ms-version" = "2020-12-06"
+                    "x-ms-date" = $dateString
+                    "DataServiceVersion" = "3.0;NetFx"
+                }
+            }
+            else {
+                # Use OAuth authentication
+                $azContext = Get-AzContext
+                $tokenInfo = Get-PlainAccessToken -ResourceUrl "https://storage.azure.com" -TenantId $azContext.Tenant.Id
+                $token = $tokenInfo.Token
+                
+                $headers = @{
+                    "Authorization" = "Bearer $token"
+                    "Accept" = "application/json;odata=nometadata"
+                    "x-ms-version" = "2020-12-06"
+                    "x-ms-date" = $dateString
+                    "DataServiceVersion" = "3.0;NetFx"
+                }
+            }
+            
+            # Query for 1 entity to test
+            $response = Invoke-RestMethod -Uri "$tableUrl`?`$top=1" -Method Get -Headers $headers -ErrorAction Stop
+            return $true
+        }
+        catch {
+            return $false
+        }
+    }
+
+    $script:storageAccountKey = $null
+    
+    # Try storage account keys first
+    try {
+        $keyResult = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction Stop
+        $script:storageAccountKey = $keyResult.Value[0]
+        
+        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName 'credentials' -StorageAccountKey $script:storageAccountKey)) {
+            $script:storageAccountKey = $null
+        }
+    }
+    catch {
+        # Storage account keys not available or disabled
+    }
+
+    # If storage account keys didn't work, try OAuth
+    if (-not $script:storageAccountKey) {
+        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName 'credentials')) {
+            throw "Failed to connect to the storage table. Ensure your user has 'Storage Table Data Contributor' role on the storage account."
+        }
+    }
+
+    # Log authentication method
+    if ($script:storageAccountKey) {
+        Write-Host "Using Account Keys Authentication Method"
+    }
+    else {
+        $azContext = Get-AzContext
+        Write-Host "Using EntraID Authentication Method with Account: $($azContext.Account.Id)"
+    }
 }
 
 process {
@@ -101,19 +295,22 @@ process {
             return
         }
 
-        # group validation
-        $entity = New-Object -TypeName Microsoft.Azure.Cosmos.Table.DynamicTableEntity -ArgumentList $tenant, "$group|$name"
-        $entity.Properties.Add('group', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($group))
-        $entity.Properties.Add('name', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($name))
-        $entity.Properties.Add('Credential', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($value))
-        $entity.Properties.Add('note', [Microsoft.Azure.Cosmos.Table.EntityProperty]::GeneratePropertyForString($note))
-        $tableOperation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrReplace($entity)
-        $status = $script:table.CloudTable.Execute($tableOperation)
-        if($status.HttpStatusCode -ge 200 -and $status.HttpStatusCode -lt 300) {
+        # Build properties hashtable
+        $properties = @{
+            group = $group
+            name = $name
+            Credential = $value
+            note = $note
+        }
+        
+        # Use REST API (with storage key if available, OAuth otherwise)
+        $statusCode = Write-TableEntityRest -StorageAccountName $storageAccountName -TableName 'credentials' -PartitionKey $tenant -RowKey "$group|$name" -Properties $properties -StorageAccountKey $script:storageAccountKey
+        
+        if($statusCode -ge 200 -and $statusCode -lt 300) {
             Write-Host "Successfully added credential '$name' in group '$group' for tenant '$tenant'."
         }
         else {
-            Write-Warning "Failed to add credential '$name' in group '$group' for tenant '$tenant'. Status code: $($status.HttpStatusCode)"
+            Write-Warning "Failed to add credential '$name' in group '$group' for tenant '$tenant'. Status code: $statusCode"
         }
     }
     catch {
