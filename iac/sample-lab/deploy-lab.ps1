@@ -39,3 +39,6 @@ if($DeploymentType -eq 'resourcegroup' -and [string]::IsNullOrEmpty($ResourceGro
 # You can use the following lines to point to a template, sitting in the same folder
 # $template = Join-Path $scriptPath "template.bicep"
 # $template = Join-Path $scriptPath "template.json"
+
+# You can send back information to the hackbox console (credentials) - Simply return a hashtable like this:
+# @{"HackboxCredential" = @{ name = "AdminPassword" ; value = "TopSecret"; note = "Useful info here" }}

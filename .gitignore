@@ -3,6 +3,8 @@ npm-debug.log
 .vscode
 __pycache__
 env
+/iac/lab/*
+/iac/lab/**/*
 /secrets-store/*
 /secrets-store/**/*
 /hack_console/challenges/*
@@ -18,4 +20,5 @@ env
 /users-coaches.csv
 /notes.md
 /createdEntraIdUserSettings.json
+/createdLabUserSettings.json
 /freerdp-web.zip
