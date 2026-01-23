@@ -6,6 +6,7 @@ from . import app, all_users, all_tenants, HackBoxUser
 from flask_login import login_user, login_required, logout_user, current_user
 from azure.data.tables import TableServiceClient
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from azure.identity import DefaultAzureCredential
 from typing import Union, Dict, Tuple
 import natsort
 
@@ -38,7 +39,10 @@ class HackBoxCredentials:
     _tenantName = "Default"
 
     def __init__(self, tenantName : str = "Default"):
-        self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
+        if (os.getenv("HACKBOX_TABLE_ENDPOINT") is not None) and (os.getenv("HACKBOX_TABLE_ENDPOINT") != ""):
+            self._tsc = TableServiceClient(endpoint=os.getenv("HACKBOX_TABLE_ENDPOINT"), credential=DefaultAzureCredential())
+        else:
+            self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("credentials")
         self._tenantName = str(tenantName).strip()
         if self._tenantName == "":
@@ -88,7 +92,10 @@ class HackBoxSettings:
     _tenantName = "Default"
 
     def __init__(self, tenantName : str = "Default"):
-        self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
+        if (os.getenv("HACKBOX_TABLE_ENDPOINT") is not None) and (os.getenv("HACKBOX_TABLE_ENDPOINT") != ""):
+            self._tsc = TableServiceClient(endpoint=os.getenv("HACKBOX_TABLE_ENDPOINT"), credential=DefaultAzureCredential())
+        else:
+            self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("settings")
         self._tenantName = str(tenantName).strip()
         self._tenantName = "".join([c for c in self._tenantName if c.isalnum() or c == "_" or c == "-" ]).strip()

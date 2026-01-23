@@ -28,6 +28,9 @@ param coachUsername string = 'coach' // The username for the coach
 @secure()
 param coachPassword string
 
+@description('Use storage account keys instead of Managed Identity')
+param useStorageAccountKeys bool = false
+
 @description('comma-separated list of RDP Backend URLs')
 param rdpBackendUrls string = ''
 
@@ -36,6 +39,7 @@ var linuxFxVersion = 'PYTHON|3.12' // The runtime stack of web app
 var appServicePlanName = toLower('plan-${webAppName}')
 var storageAccountName = toLower('storage${webAppName}')
 var webSiteName = toLower('console-${webAppName}')
+var storageSuffix = environment().suffixes.storage
 
 
 // add a vnet
@@ -129,6 +133,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: webSiteName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
     virtualNetworkSubnetId: subnet.id
@@ -141,7 +148,15 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
       appSettings: [
         {
           name: 'HACKBOX_CONNECTION_STRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${storageSuffix}'
+        }
+        {
+          name: 'HACKBOX_TABLE_ENDPOINT'
+          value: useStorageAccountKeys ? '' : '${storageAccount.name}.table.${storageSuffix}'
+        }
+        {
+          name: 'HACKBOX_BLOB_ENDPOINT'
+          value: useStorageAccountKeys ? '' : '${storageAccount.name}.blob.${storageSuffix}'
         }
         {
           name: 'HACKBOX_SECRET_KEY'
@@ -176,6 +191,27 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
+// Storage Table Data Contributor
+resource storageTableDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!useStorageAccountKeys) {
+  name: guid(storageAccount.id, appService.id, 'Storage Table Data Contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+    principalId: appService.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!useStorageAccountKeys) {
+  name: guid(storageAccount.id, appService.id, 'Storage Blob Data Contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: appService.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
 
 
 // output the name of the web app

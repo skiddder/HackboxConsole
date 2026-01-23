@@ -7,6 +7,7 @@ param (
     [string]$webAppName = $null,
     [string]$sku = $null,
     [string]$workerSize = $null,
+    [switch]$useStorageAccountKeys,
 
     [string]$hackerUsername = "",
     [securestring]$hackerPassword = $null,
@@ -204,6 +205,14 @@ $params = @{
     coachUsername = $coachUsername
     coachPassword = $coachPassword
     rdpBackendUrls = $rdpBackendUrls
+}
+if($useStorageAccountKeys) {
+    Write-Host "Using Storage Account Keys for storage access"
+    $params["useStorageAccountKeys"] = $true
+}
+else {
+    Write-Host "Using Managed Identity for storage access"
+    $params["useStorageAccountKeys"] = $false
 }
 if(-not($null -eq $location -or $location -eq "")) {
     $params["location"] = $location

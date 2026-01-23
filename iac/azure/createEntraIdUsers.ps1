@@ -49,6 +49,7 @@ param (
     [Nullable[datetime]]$hackathonStartDate = $null,
     [Nullable[datetime]]$hackathonEndDate = $null,
     [string[]]$additionalGroupnames = @(),
+    [switch]$useDomainFromConnectedAccount,
     [string]$csvPath = ""
 )
 
@@ -63,6 +64,7 @@ foreach ($module in @(
     'Microsoft.Graph.Users',
     'Microsoft.Graph.Groups',
     'Microsoft.Graph.Identity.SignIns'
+    'Microsoft.Graph.Identity.DirectoryManagement'
 )) {
     if( -not (Get-Module -ListAvailable -Name $module)) {
         Write-Host "Installing module: $module"
@@ -95,15 +97,17 @@ $mgctx = Get-MgContext
 if($null -eq $mgctx -or 
     $mgctx.Scopes -notcontains "User.ReadWrite.All" -or
     $mgctx.Scopes -notcontains "Group.ReadWrite.All" -or
-    $mgctx.Scopes -notcontains "UserAuthenticationMethod.ReadWrite.All"
+    $mgctx.Scopes -notcontains "UserAuthenticationMethod.ReadWrite.All" -or
+    $mgctx.Scopes -notcontains "Domain.Read.All"
 ) {
     Write-Host "Connecting to Microsoft Graph with required permissions..."
-    Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All" -UseDeviceCode
+    Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All","Domain.Read.All" -UseDeviceCode
     $mgctx = Get-MgContext
     if($null -eq $mgctx -or 
         $mgctx.Scopes -notcontains "User.ReadWrite.All" -or
         $mgctx.Scopes -notcontains "Group.ReadWrite.All" -or
-        $mgctx.Scopes -notcontains "UserAuthenticationMethod.ReadWrite.All"
+        $mgctx.Scopes -notcontains "UserAuthenticationMethod.ReadWrite.All" -or
+        $mgctx.Scopes -notcontains "Domain.Read.All"
     ) {
         throw "Failed to connect to Microsoft Graph with required permissions."
     }
@@ -153,9 +157,24 @@ if($tenantNames.Count -eq 0) {
 }
 
 
+if($useDomainFromConnectedAccount) {
+    $userDomain = $mgctx.Account.Split('@')[1]
+}
+else {
+    try {
+        $userDomain = (Get-MgDomain -ErrorAction Stop | Where-Object { $_.IsDefault }).Id
+    }
+    catch {
+        $userDomain = ""
+    }
+    if(-not $userDomain) {
+        $userDomain = $mgctx.Account.Split('@')[1]
+    }
+}
+Write-Host "Using user domain: $userDomain"
+
 $createdUsers = @()
 $createdEntraIdUserSettings = @()
-$userDomain = $mgctx.Account.Split('@')[1]
 $currentIndex = ($startUserIndex - 1)
 foreach($tenantName in $tenantNames) {
     $currentIndex++
