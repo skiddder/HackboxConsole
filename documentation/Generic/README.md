@@ -56,7 +56,7 @@ Generic Build Instructions
          # select the appropriate subscription for the management resources
          Select-AzSubscription -SubscriptionId "management"
          # deploy the Hackathon Console
-         Get-Content .\createdEntraIdUserSettings.json | ConvertFrom-Json | .\iac\addMultipleCredentails.ps1
+         Get-Content .\createdEntraIdUserSettings.json | ConvertFrom-Json | .\iac\addMultipleCredentials.ps1
          ```
 
       1. Prepare the quota requests (if applicable):

@@ -26,12 +26,12 @@ Each object should expose at least the 'name' and 'value' properties, and can
 optionally include 'group' and 'tenant' to override their defaults.
 
 .EXAMPLE
-Get-Content .\creds.json | ConvertFrom-Json | .\addMultipleCredentails.ps1 -storageAccountName 'contosovault' -ResourceGroupName 'HackConsole'
+Get-Content .\creds.json | ConvertFrom-Json | .\addMultipleCredentials.ps1 -storageAccountName 'contosovault' -ResourceGroupName 'HackConsole'
 Loads credential objects from creds.json and writes them to the credentials table.
 
 .EXAMPLE
 [pscustomobject]@{ name = 'ApiKey'; value = 'secret'; group = 'Prod'; tenant = 'team1' } |
-  .\addMultipleCredentails.ps1 -storageAccountName 'storageName'
+  .\.ps1 -storageAccountName 'storageName'
 Creates an inline credential object and submits it directly through the pipeline.
 #>
 [CmdletBinding()]
