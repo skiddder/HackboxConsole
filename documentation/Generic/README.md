@@ -76,6 +76,15 @@ Generic Build Instructions
          # or for subscription based deployments
          .\iac\azure\deployLabEnvironments.ps1 -labDirectory C:\path\to\directory\lab\ -managementGroupId "labsubscriptions" -subscriptionPrefix "traininglab-" -deploymentType "subscription"
          ```
+      1. Publish the lab user credentials to the Hackathon Console (in case the deploy-lab.ps1 script created entries):
+         ```pwsh
+         # check if the createdLabUserSettings.json file exists
+         Test-Path .\createdLabUserSettings.json
+         # select the appropriate subscription for the management resources
+         Select-AzSubscription -SubscriptionId "management"
+         # deploy the Hackathon Console
+         Get-Content .\createdLabUserSettings.json | ConvertFrom-Json | .\iac\addMultipleCredentials.ps1
+         ```
       1. Test if everything is working as expected (resources got deployed, ...)
 
    1. After the Event
