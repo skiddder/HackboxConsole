@@ -55,7 +55,18 @@ begin {
     }
 
     $script:firewallAdded = $false
+    $script:publicAccessWasDisabled = $false
     if(-not $skipFirewallRule) {
+        # Check if public network access is enabled
+        $storageAccountInfo = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction Stop
+        if ($storageAccountInfo.PublicNetworkAccess -eq 'Disabled') {
+            Write-Host "Public network access is disabled. Temporarily enabling it."
+            Set-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -PublicNetworkAccess Enabled -ErrorAction Stop | Out-Null
+            $script:publicAccessWasDisabled = $true
+            Write-Host "Waiting for 10 seconds for the public network access change to take effect"
+            Start-Sleep -Seconds 10
+        }
+
         # add the client ip to the storage account firewall
         $script:ipToUse = $ip
         if([string]::IsNullOrWhiteSpace($script:ipToUse)) {
@@ -322,5 +333,9 @@ end {
     if ($script:firewallAdded) {
         Write-Host "Removing firewall rule for the client ip ($($script:ipToUse))"
         Remove-AzStorageAccountNetworkRule -ResourceGroupName $ResourceGroupName -Name $storageAccountName -IPAddressOrRange "$($script:ipToUse)" -ErrorAction Stop | Out-Null
+    }
+    if ($script:publicAccessWasDisabled) {
+        Write-Host "Restoring public network access to disabled state"
+        Set-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -PublicNetworkAccess Disabled -ErrorAction Stop | Out-Null
     }
 }
