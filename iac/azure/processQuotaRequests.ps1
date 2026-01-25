@@ -381,9 +381,9 @@ foreach($row in $quotaRequests) {
 $subscriptionIdFilter = $null
 if($managementGroupId -ne "") {
     $subscriptionIdFilter = @{}
-    Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand -ErrorAction Stop | Select-Object -ExpandProperty Children | ForEach-Object {
-        if($_.Type -eq "/subscriptions") {
-            $subscriptionIdFilter[$_.Name.ToLower()] = $true
+    foreach($mg in (Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand -ErrorAction Stop | Select-Object -ExpandProperty Children )) {
+        if($mg.Type -eq "/subscriptions") {
+            $subscriptionIdFilter[$mg.Name.ToLower()] = $true
         }
     }
 }

@@ -1,29 +1,108 @@
 <#
 .SYNOPSIS
-sadasd
+    Deploys lab environments to Azure subscriptions for hackathon participants.
+
 .DESCRIPTION
-dasds
+    This script automates the deployment of lab environments for hackathon or training events.
+    It reads Entra ID user information from 'createdEntraIdUserSettings.json', identifies qualified
+    Azure subscriptions based on a naming prefix, and deploys lab resources for each user.
+
+    The script supports two deployment types:
+    - 'subscription': Each user gets their own subscription with Owner role. One user per subscription.
+    - 'resourcegroup': Multiple users share a subscription, each with their own resource group.
+      Users get Reader role on the subscription and Owner role on their resource group.
+    - 'resourcegroup-with-subscriptionowner': Similar to 'resourcegroup', but users also get Owner role on the subscription.
+
+    The script runs lab deployments in parallel using PowerShell jobs for improved performance.
+    Deployment credentials are collected and exported to 'createdLabUserSettings.json'.
+
+.PARAMETER labDirectory
+    Path to the directory containing the 'deploy-lab.ps1' script for lab resource deployment.
+    If empty, only role assignments and resource group creation (for resourcegroup type) are performed.
+    ( If empty, users must then deploy the labs manually. )
+
 .PARAMETER managementGroupId
-Limits the cleanup to subscriptions inside the specified management group; when omitted, all tenant subscriptions are considered.
+    Limits the deployment to subscriptions within the specified Azure Management Group.
+    When omitted, all tenant subscriptions matching the prefix are considered.
+
 .PARAMETER subscriptionPrefix
-Prefix used to select target subscriptions (defaults to 'traininglab-').
+    Prefix used to filter and select target Azure subscriptions.
+    Default: 'traininglab-'
+
 .PARAMETER deploymentType
-Defines the deployment scope; allowed values are subscription or resourcegroup (defaults to 'resourcegroup').
+    Defines the deployment scope. Valid values:
+    - 'subscription': One user per subscription with Owner role.
+    - 'resourcegroup': Multiple users per subscription, each with their own resource group.
+    Default: 'resourcegroup'
+
 .PARAMETER teamsPerSubscription
-Number of teams expected per subscription (defaults to 5). Just for resourcegroup deployments.
+    Number of users (teams) to accommodate per subscription.
+    Only applicable when deploymentType is 'resourcegroup'.
+    Default: 5
+
 .PARAMETER preferredLocation
-Specifies the preferred Azure region for resource deployment. "" indicates no preference.
+    Specifies the preferred Azure region for resource deployment (e.g., 'westeurope', 'eastus').
+    If empty, defaults to 'swedencentral' for resource group creation.
+
+.PARAMETER labDeploymentParallelization
+    Maximum number of concurrent lab deployment jobs to run in parallel.
+    Valid range: 1-100
+    Default: 10
+
+.PARAMETER skipResourceGroupCreation
+    When specified, skips the creation of resource groups and Owner role assignments.
+    Useful when resource groups already exist or are managed externally.
+    Only applicable when deploymentType is 'resourcegroup'.
+
+.EXAMPLE
+    .\deployLabEnvironments.ps1
+
+    Deploys lab environments using default settings. Creates resource groups for each user
+    in subscriptions prefixed with 'traininglab-'.
+
+.EXAMPLE
+    .\deployLabEnvironments.ps1 -labDirectory "C:\Labs\AzureWorkshop" -deploymentType "subscription"
+
+    Deploys lab resources from the specified directory, assigning one subscription per user
+    with Owner permissions.
+
+.EXAMPLE
+    .\deployLabEnvironments.ps1 -managementGroupId "labsubscriptions" -labDirectory ".\iac\lab" -teamsPerSubscription 2 -preferredLocation "eastus"
+
+    Deploys labs with 2 users per subscription in the East US region and just uses subscriptions under the 'labsubscriptions' management group.
+
+.EXAMPLE
+    .\deployLabEnvironments.ps1 -managementGroupId "labsubscriptions" -subscriptionPrefix "workshop-"
+
+    Deploys to subscriptions starting with 'workshop-' that are within the 'labsubscriptions' management group.
+
+.EXAMPLE
+    .\deployLabEnvironments.ps1 -labDirectory ".\iac\lab" -labDeploymentParallelization 20 -skipResourceGroupCreation
+
+    Deploys labs with up to 20 concurrent jobs, using existing resource groups.
+
+.NOTES
+    Prerequisites:
+    - Run 'createEntraIdUsers.ps1' first to generate 'createdEntraIdUserSettings.json'
+    - Azure PowerShell (Az module) must be installed or will be auto-installed
+    - Microsoft Graph PowerShell SDK (Microsoft.Graph.Users) must be installed or will be auto-installed
+    - Authenticated sessions to both Azure and Microsoft Graph are required
+
+    Output:
+    - Creates 'createdLabUserSettings.json' with deployment credentials in the console root directory
 #>
 param(
     [string]$labDirectory = "",
     [string]$managementGroupId = "",
     [string]$subscriptionPrefix = "traininglab-",
-    [ValidateSet('subscription','resourcegroup')]
+    [ValidateSet('subscription','resourcegroup','resourcegroup-with-subscriptionowner')]
     [string]$deploymentType = "resourcegroup",
     [int]$teamsPerSubscription = 5,
     [string]$preferredLocation = "",
     [ValidateRange(1, 100)]
-    [int]$labDeploymentParallelization = 10,
+    [int]$labDeploymentParallelization = 5,
+    [ValidateRange(250, 1000000)]
+    [int]$maxSleepDelayMilliseconds = 25000,
     [switch]$skipResourceGroupCreation
 )
 
@@ -46,10 +125,17 @@ if($labDirectory -ne "") {
 }
 
 # az module
-if(-not (Get-Module -ListAvailable -Name Az)) {
-    Install-Module -Name Az -AllowClobber -Force
+foreach($module in @(
+    'Az.Accounts',
+    'Az.Resources'
+)) {
+    if( -not (Get-Module -ListAvailable -Name $module)) {
+        Write-Host "Installing module: $module"
+        Install-Module -Name $module -AllowClobber -Force
+    }
+    Write-Host "Importing module: $module"
+    Import-Module $module
 }
-Import-Module Az
 if(-not (Get-AzContext -ErrorAction SilentlyContinue)) {
     Connect-AzAccount -UseDeviceAuthentication
 }
@@ -159,9 +245,9 @@ $users = $users | Sort-Object -Property UserPrincipalName
 $subscriptionIdFilter = $null
 if($managementGroupId -ne "") {
     $subscriptionIdFilter = @{}
-    Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand -ErrorAction Stop | Select-Object -ExpandProperty Children | ForEach-Object {
-        if($_.Type -eq "/subscriptions") {
-            $subscriptionIdFilter[$_.Name.ToLower()] = $true
+    foreach($mg in (Get-AzManagementGroup -GroupName $managementGroupId -Recurse -Expand -ErrorAction Stop | Select-Object -ExpandProperty Children )) {
+        if($mg.Type -eq "/subscriptions") {
+            $subscriptionIdFilter[$mg.Name.ToLower()] = $true
         }
     }
 }
@@ -247,7 +333,7 @@ if($deploymentType -eq "subscription") {
                 Write-Host "[Job $($taskIndex + 1)/$($deploymentTasks.Count)] Starting deployment for user $($task.UserPrincipalName) in subscription $($task.SubscriptionName)..."
                 
                 $job = Start-Job -ScriptBlock {
-                    param($labScriptPath, $deploymentType, $subscriptionId, $preferredLocation, $userId)
+                    param($labScriptPath, $deploymentType, $subscriptionId, $preferredLocation, $userId, $maxSleepDelay)
                     
                     # Import Az modules
                     foreach($mod in @("Az.Accounts","Az.Resources")) {
@@ -255,13 +341,21 @@ if($deploymentType -eq "subscription") {
                     }
                     # and set context
                     Set-AzContext -SubscriptionId $subscriptionId -ErrorAction Stop -Scope Process | Out-Null
+
+                    # random sleep in milliseconds to reduce contention
+                    if($maxSleepDelay -gt 1000) {
+                        Start-Sleep -Milliseconds (Get-Random -Minimum 1000 -Maximum $maxSleepDelay)
+                    }
+                    else {
+                        Start-Sleep -Milliseconds (Get-Random -Minimum 100 -Maximum $maxSleepDelay)
+                    }
                     
                     & $labScriptPath `
                         -DeploymentType $deploymentType `
                         -SubscriptionId $subscriptionId `
                         -PreferredLocation $preferredLocation `
                         -AllowedEntraUserIds @($userId)
-                } -ArgumentList $labScriptPath, $deploymentType, $task.SubscriptionId, $preferredLocation, $task.UserId
+                } -ArgumentList $labScriptPath, $deploymentType, $task.SubscriptionId, $preferredLocation, $task.UserId, $maxSleepDelayMilliseconds
                 
                 $runningJobs += @{ Job = $job; Task = $task; Index = $taskIndex }
                 $taskIndex++
@@ -295,7 +389,7 @@ if($deploymentType -eq "subscription") {
         Write-Host "Parallel deployment completed. Total: $completedCount jobs."
     }
 }
-elseif($deploymentType -eq "resourcegroup") {
+elseif($deploymentType -eq "resourcegroup" -or $deploymentType -eq "resourcegroup-with-subscriptionowner") {
     Write-Host "Deploying lab resources scoped to resource groups."
     $currentUserIndex = 0
     $deploymentTasks = @()
@@ -309,9 +403,13 @@ elseif($deploymentType -eq "resourcegroup") {
             }
             $user = $users[$currentUserIndex]
             # assign user to this subscription as reader
-            if(-not (Get-AzRoleAssignment -ObjectId $user.Id -Scope "/subscriptions/$($sub.Id)" -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue)) {
-                Write-Host "Assigning user $($user.UserPrincipalName) as Reader to subscription $($sub.Name) ($($sub.Id))..."
-                New-AzRoleAssignment -ObjectId $user.Id -RoleDefinitionName "Reader" -Scope "/subscriptions/$($sub.Id)" -ErrorAction Stop | Out-Null
+            $rolename = "Reader"
+            if($deploymentType -eq "resourcegroup-with-subscriptionowner") {
+                $rolename = "Owner"
+            }
+            if(-not (Get-AzRoleAssignment -ObjectId $user.Id -Scope "/subscriptions/$($sub.Id)" -RoleDefinitionName $rolename -ErrorAction SilentlyContinue)) {
+                Write-Host "Assigning user $($user.UserPrincipalName) as $rolename to subscription $($sub.Name) ($($sub.Id))..."
+                New-AzRoleAssignment -ObjectId $user.Id -RoleDefinitionName $rolename -Scope "/subscriptions/$($sub.Id)" -ErrorAction Stop | Out-Null
             }
             else {
                 Write-Host "User $($user.UserPrincipalName) is already assigned as Reader to subscription $($sub.Name) ($($sub.Id))."
@@ -329,7 +427,7 @@ elseif($deploymentType -eq "resourcegroup") {
                         $rglocation = $preferredLocation 
                     } 
                     else { 
-                        $rglocation = "westeurope" 
+                        $rglocation = "swedencentral" 
                     }
                     New-AzResourceGroup -Name $resourceGroupName -Location $rglocation -ErrorAction Stop | Out-Null
                 }
@@ -385,7 +483,7 @@ elseif($deploymentType -eq "resourcegroup") {
                 Write-Host "[Job $($taskIndex + 1)/$($deploymentTasks.Count)] Starting deployment for user $($task.UserPrincipalName) in subscription $($task.SubscriptionName)..."
                 
                 $job = Start-Job -ScriptBlock {
-                    param($labScriptPath, $deploymentType, $subscriptionId, $resourceGroupName, $preferredLocation, $userId)
+                    param($labScriptPath, $deploymentType, $subscriptionId, $resourceGroupName, $preferredLocation, $userId, $maxSleepDelay)
                     
                     # Import Az modules
                     foreach($mod in @("Az.Accounts","Az.Resources")) {
@@ -393,6 +491,14 @@ elseif($deploymentType -eq "resourcegroup") {
                     }
                     # and set context
                     Set-AzContext -SubscriptionId $subscriptionId -ErrorAction Stop -Scope Process | Out-Null
+
+                    # random sleep in milliseconds to reduce contention
+                    if($maxSleepDelay -gt 1000) {
+                        Start-Sleep -Milliseconds (Get-Random -Minimum 1000 -Maximum $maxSleepDelay)
+                    }
+                    else {
+                        Start-Sleep -Milliseconds (Get-Random -Minimum 100 -Maximum $maxSleepDelay)
+                    }
                     
                     & $labScriptPath `
                         -DeploymentType $deploymentType `
@@ -400,7 +506,7 @@ elseif($deploymentType -eq "resourcegroup") {
                         -ResourceGroupName $resourceGroupName `
                         -PreferredLocation $preferredLocation `
                         -AllowedEntraUserIds @($userId)
-                } -ArgumentList $labScriptPath, $deploymentType, $task.SubscriptionId, $task.ResourceGroupName, $preferredLocation, $task.UserId
+                } -ArgumentList $labScriptPath, $deploymentType, $task.SubscriptionId, $task.ResourceGroupName, $preferredLocation, $task.UserId, $maxSleepDelayMilliseconds
                 
                 $runningJobs += @{ Job = $job; Task = $task; Index = $taskIndex }
                 $taskIndex++

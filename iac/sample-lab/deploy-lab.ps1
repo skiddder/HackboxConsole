@@ -16,7 +16,7 @@ Optional list of Entra user object IDs permitted to access the lab resources.
 #>
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet('subscription','resourcegroup')]
+    [ValidateSet('subscription','resourcegroup', 'resourcegroup-with-subscriptionowner')]
     [string]$DeploymentType,
     
     [Parameter(Mandatory=$true)]

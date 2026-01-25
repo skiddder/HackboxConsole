@@ -150,7 +150,7 @@ foreach($u in Get-Content (Join-Path -Path $consoleRoot -ChildPath "users.json")
         $tenantNames[$u.tenant] = $true
     }
 }
-$tenantNames = $tenantNames.Keys
+$tenantNames = $tenantNames.Keys | Sort-Object
 Write-Host "We have $($tenantNames.Count) tenants"
 if($tenantNames.Count -eq 0) {
     throw "No tenants found in users.json"
