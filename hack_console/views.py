@@ -10,6 +10,20 @@ from azure.identity import DefaultAzureCredential
 from typing import Union, Dict, Tuple
 import natsort
 
+def get_azure_credential():
+    """Get a fresh Azure credential instance to avoid token caching issues."""
+    return DefaultAzureCredential(
+        exclude_shared_token_cache_credential=True,  # Avoid stale cached tokens
+    )
+
+def get_table_endpoint() -> str:
+    """Get properly formatted table endpoint URL."""
+    endpoint = os.getenv("HACKBOX_TABLE_ENDPOINT", "")
+    if endpoint and not endpoint.startswith("https://") and not endpoint.startswith("http://"):
+        endpoint = f"https://{endpoint}"
+    return endpoint
+
+
 # get the directory of this file
 challenges_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "challenges")
 solutions_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "solutions")
@@ -39,8 +53,9 @@ class HackBoxCredentials:
     _tenantName = "Default"
 
     def __init__(self, tenantName : str = "Default"):
-        if (os.getenv("HACKBOX_TABLE_ENDPOINT") is not None) and (os.getenv("HACKBOX_TABLE_ENDPOINT") != ""):
-            self._tsc = TableServiceClient(endpoint=os.getenv("HACKBOX_TABLE_ENDPOINT"), credential=DefaultAzureCredential())
+        endpoint = get_table_endpoint()
+        if endpoint:
+            self._tsc = TableServiceClient(endpoint=endpoint, credential=get_azure_credential())
         else:
             self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("credentials")
@@ -92,8 +107,9 @@ class HackBoxSettings:
     _tenantName = "Default"
 
     def __init__(self, tenantName : str = "Default"):
-        if (os.getenv("HACKBOX_TABLE_ENDPOINT") is not None) and (os.getenv("HACKBOX_TABLE_ENDPOINT") != ""):
-            self._tsc = TableServiceClient(endpoint=os.getenv("HACKBOX_TABLE_ENDPOINT"), credential=DefaultAzureCredential())
+        endpoint = get_table_endpoint()
+        if endpoint:
+            self._tsc = TableServiceClient(endpoint=endpoint, credential=get_azure_credential())
         else:
             self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("settings")

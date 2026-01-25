@@ -8,6 +8,7 @@ param (
     [string]$sku = $null,
     [string]$workerSize = $null,
     [switch]$useStorageAccountKeys,
+    [switch]$usePublicEndpoints,
 
     [string]$hackerUsername = "",
     [securestring]$hackerPassword = $null,
@@ -213,6 +214,14 @@ if($useStorageAccountKeys) {
 else {
     Write-Host "Using Managed Identity for storage access"
     $params["useStorageAccountKeys"] = $false
+}
+if($usePublicEndpoints) {
+    Write-Host "Using Public Endpoints for resources"
+    $params["usePrivateEndpoints"] = $false
+}
+else {
+    Write-Host "Using Private Endpoints for resources"
+    $params["usePrivateEndpoints"] = $true
 }
 if(-not($null -eq $location -or $location -eq "")) {
     $params["location"] = $location
