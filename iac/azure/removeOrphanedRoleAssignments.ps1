@@ -9,7 +9,9 @@ Switch that, when set, scans every resource group in each subscription in additi
 .\removeOrphanedRoleAssignments.ps1 -includeResourceGroups
 #>
 param(
-    [switch]$includeResourceGroups
+    [switch]$excludeSubscriptionScope,
+    [switch]$includeManagementGroupScope,
+    [switch]$includeResourceGroupScope
 )
 
 
@@ -120,13 +122,23 @@ function Remove-OrphanedRoleAssignments {
     }
 }
 
-foreach($subscription in (Get-AzSubscription)) {
-    Write-Host ("Processing subscription: " + $subscription.SubscriptionId + " (" + $subscription.Name + ")")
-    Remove-OrphanedRoleAssignments -Scope ("/subscriptions/" + $subscription.SubscriptionId)
+
+
+if($includeManagementGroupScope) {
+    foreach($mg in (Get-AzManagementGroup)) {
+        Write-Host ("Processing Management Group: " + $mg.Name)
+        Remove-OrphanedRoleAssignments -Scope ($mg.Id)
+    }
 }
 
+if(-not $excludeSubscriptionScope) {
+    foreach($subscription in (Get-AzSubscription)) {
+        Write-Host ("Processing subscription: " + $subscription.SubscriptionId + " (" + $subscription.Name + ")")
+        Remove-OrphanedRoleAssignments -Scope ("/subscriptions/" + $subscription.SubscriptionId)
+    }
+}
 
-if($includeResourceGroups) {
+if($includeResourceGroupScope) {
     $context = Get-AzContext
     foreach($subscription in (Get-AzSubscription)) {
         Set-AzContext -SubscriptionId $subscription.SubscriptionId
