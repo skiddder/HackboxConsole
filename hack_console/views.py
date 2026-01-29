@@ -623,12 +623,6 @@ def api_get_rdp_connection():
             "host": None,
             "port": 3389
         }
-        rdpconnection = {
-            "host": '172.160.240.183',
-            "port": 3389,
-            "user": 'marco',
-            "pass": '40+k8RPH-G5r'
-        }
         return jsonify({"endpoints": rdp_endpoints, "connection": rdpconnection}), 200
     return jsonify({"endpoints": rdp_endpoints})
 
