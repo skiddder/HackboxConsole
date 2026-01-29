@@ -9,7 +9,8 @@ export async function getRdpClient(element = null, connectBtn = null) {
         element = document.getElementById('rdpContainer');
     }
     if(!(element instanceof HTMLElement)) {
-        throw new Error('Invalid element provided to getRdpClient');
+        console.log('RDP Integration is disabled.');
+        return null;
     }
     const response = await fetch('/api/get/rdp-connection');
     if (!response.ok) {
