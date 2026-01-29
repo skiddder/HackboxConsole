@@ -27,7 +27,7 @@ def get_table_endpoint() -> str:
 # endpoints
 rdp_endpoints = os.getenv("HACKBOX_RDP_WEBSOCKET_ENDPOINTS", "")
 rdp_endpoints = [ep.strip() for ep in rdp_endpoints.split(",") if ep and ep.strip()]
-# does the static assets/freerdp-web/ directory exist?
+# does the static/freerdp-web/ directory exist?
 rdp_integration = False
 if len(rdp_endpoints) > 0:
     rdp_integration = True
