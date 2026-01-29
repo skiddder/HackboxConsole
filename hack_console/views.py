@@ -26,7 +26,6 @@ def get_table_endpoint() -> str:
 
 # endpoints
 rdp_endpoints = os.getenv("HACKBOX_RDP_WEBSOCKET_ENDPOINTS", "")
-rdp_endpoints = "https://rdp.microhack.cloud/" # debug endpoint
 rdp_endpoints = [ep.strip() for ep in rdp_endpoints.split(",") if ep and ep.strip()]
 # does the static assets/freerdp-web/ directory exist?
 rdp_integration = False
@@ -312,7 +311,7 @@ def home():
         return redirect(url_for("login"))
     if not isinstance(current_user, HackBoxUser):
         return redirect(url_for("login"))
-    return render_template("index.html", user=current_user)
+    return render_template("index.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/challenges")
 def challenges():
@@ -321,7 +320,7 @@ def challenges():
         return redirect(url_for("login"))
     if not isinstance(current_user, HackBoxUser):
         return redirect(url_for("login"))
-    return render_template("challenges.html", user=current_user)
+    return render_template("challenges.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/solutions")
 def solutions():
@@ -332,7 +331,7 @@ def solutions():
         return redirect(url_for("login"))
     if current_user.role != "coach":
         return redirect(url_for("home"))
-    return render_template("solutions.html", user=current_user)
+    return render_template("solutions.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/credentials")
 def credentials():
@@ -343,7 +342,7 @@ def credentials():
         return redirect(url_for("login"))
     if current_user.role not in ["coach", "hacker"]:
         return redirect(url_for("home"))
-    return render_template("credentials.html", user=current_user)
+    return render_template("credentials.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/webtimer")
 def webtimer():
@@ -354,7 +353,7 @@ def webtimer():
         return redirect(url_for("login"))
     if current_user.role not in ["coach", "hacker"]:
         return redirect(url_for("home"))
-    return render_template("webtimer.html", user=current_user)
+    return render_template("webtimer.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/techlead")
 def techlead():
@@ -365,7 +364,7 @@ def techlead():
         return redirect(url_for("login"))
     if current_user.role not in ["techlead"]:
         return redirect(url_for("home"))
-    return render_template("techlead.html", user=current_user)
+    return render_template("techlead.html", user=current_user, rdp_integration=rdp_integration)
 
 @app.route("/logout")
 def logout():
@@ -379,18 +378,18 @@ def login():
         # user exists?
         username = str(request.form.get("username")).lower().strip()
         if username not in all_users:
-            return render_template("login.html", message="User not found", user=current_user)
+            return render_template("login.html", message="User not found", user=current_user, rdp_integration=rdp_integration)
         user = all_users[username]
         # Check the username (again)
         if str(user.username).lower().strip() != username:
-            return render_template("login.html", message="Invalid credentials", user=current_user)
+            return render_template("login.html", message="Invalid credentials", user=current_user, rdp_integration=rdp_integration)
         # Check the password
         if user.password == request.form.get("password"):
             # Use the login_user method to log in the user
             login_user(user)
             return redirect(url_for("home"))
-        return render_template("login.html", message="Invalid credentials", user=current_user)
-    return render_template("login.html", user=current_user)
+        return render_template("login.html", message="Invalid credentials", user=current_user, rdp_integration=rdp_integration)
+    return render_template("login.html", user=current_user, rdp_integration=rdp_integration)
 #endregion -------- WEB/UI ENDPOINTS --------
 
 #region -------- API ENDPOINTS --------
