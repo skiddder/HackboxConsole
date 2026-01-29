@@ -43,7 +43,7 @@ Import-Module Az.Websites
 Import-Module Az.Resources
 
 # use the following Git Tag
-$rdpGitTag = "v3.7.0"
+$rdpGitTag = "v3.7.1"
 $branchHash = ""
 
 # rdp vm deployment requires rdp integration
