@@ -7,6 +7,8 @@ Home
 {% block toolbar %}
 {% endblock %}
 {% block content %}
+<section class="view fade-in">
+
 <h1 class="page-title">Welcome 👋</h1>
 {% if user and user.is_authenticated and user.role == 'techlead' %}
 <p class="lead">As a Tech Lead, you can manage everything.</p>
@@ -57,6 +59,8 @@ Home
 	<h2 class="celebration-header">Congratulations you have completed all challenges! 🎉</h2>
 	<img src="{{ url_for('static', filename='assets/img/challengesCompleted.jpg') }}" alt="Hackathon Challenges Completed" title="Hackathon Challenges Completed" class="celebration-image" />
 </div>
+
+</section>
 {% endif %}
 
 {% endblock %}
