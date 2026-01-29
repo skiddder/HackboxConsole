@@ -28,8 +28,7 @@ window.solution.registerHotkeys();
 
 (async () => {
     const rdpClient = await getRdpClient();
-    if (rdpClient) {
-        // You can now use rdpClient to interact with the RDP session
-    }
-    
+    if(rdpClient) {
+        // window.solution.addRdpClient(rdpClient);
+    } 
 })();

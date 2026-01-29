@@ -226,6 +226,7 @@ export class MdManager {
     #allowedMdPaths = [];
     #mdEndpoints = {};
     #tooltip = new ToolTip();
+    #rdpClient = null;
 
     constructor(settings) {
         if(settings === null || settings === undefined) {
@@ -288,6 +289,10 @@ export class MdManager {
         this.#setZeroMdListener();
 
         this.refresh();
+    }
+
+    addRdpClient(rdpClient) {
+        this.#rdpClient = rdpClient;
     }
 
     gotoSubSiteMd(path) {
@@ -442,7 +447,12 @@ export class MdManager {
         // replace secret element with span
         let span = document.createElement("span");
         span.classList.add("secret");
-        span.title = 'Double click to copy credential.';
+        if(this.#rdpClient) {
+            span.title = 'Double Click to inject credential into RDP session.';
+        }
+        else {
+            span.title = 'Double click to copy credential.';
+        }
         if(secret.note) {
             span.title += ' (Note: ' + secret.note + ')';
         }
@@ -468,9 +478,30 @@ export class MdManager {
             });
         }
         clicker.onDoubleClick(function(event) {
-            navigator.clipboard.writeText(secretValue);
+            let useRdpClient = false;
+            try {
+                if(that.#rdpClient && that.#rdpClient.isConnected()) {
+                    useRdpClient = true;
+                }
+            }
+            catch {
+                useRdpClient = false;
+            }
+
+            if(useRdpClient) {
+                try {
+                    that.#rdpClient.sendKeys(secretValue);
+                }
+                catch {
+                    console.log("Failed to inject credential into RDP session");
+                }
+                that.#tooltip.show('📑 Injecting!', 1200, event);
+            }
+            else {
+                navigator.clipboard.writeText(secretValue);
+                that.#tooltip.show('📑 Copied!', 1200, event);
+            }
             // show tooltip
-            that.#tooltip.show('📑 Copied!', 1200, event);
             that.#tooltip.onHideOnce(() => {
                 // set credential to initial state
                 if(show === "true") {
