@@ -24,6 +24,19 @@ def get_table_endpoint() -> str:
     return endpoint
 
 
+# endpoints
+rdp_endpoints = os.getenv("HACKBOX_RDP_WEBSOCKET_ENDPOINTS", "")
+rdp_endpoints = "https://rdp.microhack.cloud/" # debug endpoint
+rdp_endpoints = [ep.strip() for ep in rdp_endpoints.split(",") if ep and ep.strip()]
+# does the static assets/freerdp-web/ directory exist?
+rdp_integration = False
+if len(rdp_endpoints) > 0:
+    rdp_integration = True
+    if not os.path.isdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", "freerdp-web")):
+        print("WARNING: RDP WebSocket endpoints configured, but freerdp-web static assets not found. RDP integration disabled.")
+        rdp_integration = False
+
+
 # get the directory of this file
 challenges_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "challenges")
 solutions_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "solutions")
@@ -599,12 +612,10 @@ def api_set_tenants_settings():
 
 @app.route("/api/get/rdp-connection", methods=["GET"])
 def api_get_rdp_connection():
-    raw_rdp_endpoints = os.getenv("HACKBOX_RDP_WEBSOCKET_ENDPOINTS", "")
-    endpoints = [ep.strip() for ep in raw_rdp_endpoints.split(",") if ep and ep.strip()]
-    if len(endpoints) == 0:
+    if len(rdp_endpoints) == 0:
         return jsonify({"endpoints": []}), 200
     if not isinstance(current_user, HackBoxUser):
-        return jsonify({"endpoints": endpoints }), 200
+        return jsonify({"endpoints": rdp_endpoints }), 200
     if current_user.role not in ["coach", "hacker"]:
         # todo retrieve rdp connections information for the current user
         rdpconnection = {
@@ -613,8 +624,8 @@ def api_get_rdp_connection():
             "host": None,
             "port": 3389
         }
-        return jsonify({"endpoints": endpoints, "rdpconnection": rdpconnection}), 200
-    return jsonify({"endpoints": endpoints})
+        return jsonify({"endpoints": rdp_endpoints, "rdpconnection": rdpconnection}), 200
+    return jsonify({"endpoints": rdp_endpoints})
 
 #endregion -------- API ENDPOINTS --------
 
