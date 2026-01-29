@@ -12,7 +12,7 @@ Challenges
 				<a href="#" class="pill-btn" id="navToPreviousChallenge" aria-label="Previous challenge">⟨ Prev</a>
 				<a href="#" class="pill-btn current" id="navToCurrentChallenge">Current: <span id="challengeIndex">?</span></a>
 				<a href="#" class="pill-btn" id="navToNextChallenge" aria-label="Next challenge">Next ⟩</a>
-				<a href="#" class="pill-btn" id="rdpConnectBtn">RDP Reset</a>
+				{% if rdp_integration %}<a href="#" class="pill-btn" id="rdpConnectBtn">RDP Reset</a>{% endif %}
 			</div>
             {% if user and user.is_authenticated and user.role == 'coach' %}
 			<div class="toolbar-group">

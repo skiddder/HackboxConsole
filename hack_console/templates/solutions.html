@@ -12,6 +12,7 @@ Solutions
 				<a href="#" class="pill-btn" id="navToPreviousSolution" aria-label="Previous solution">⟨ Prev</a>
 				<a href="#" class="pill-btn current" id="navToCurrentSolution">Current: <span id="solutionIndex">?</span></a>
 				<a href="#" class="pill-btn" id="navToNextSolution" aria-label="Next solution">Next ⟩</a>
+				{% if rdp_integration %}<a href="#" class="pill-btn" id="rdpConnectBtn">RDP Reset</a>{% endif %}
 			</div>
             {% if user and user.is_authenticated and user.role == 'coach' %}
 			<div class="toolbar-group">
