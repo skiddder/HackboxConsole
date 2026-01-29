@@ -12,6 +12,7 @@ Challenges
 				<a href="#" class="pill-btn" id="navToPreviousChallenge" aria-label="Previous challenge">⟨ Prev</a>
 				<a href="#" class="pill-btn current" id="navToCurrentChallenge">Current: <span id="challengeIndex">?</span></a>
 				<a href="#" class="pill-btn" id="navToNextChallenge" aria-label="Next challenge">Next ⟩</a>
+				<a href="#" class="pill-btn" id="rdpConnectBtn">RDP Reset</a>
 			</div>
             {% if user and user.is_authenticated and user.role == 'coach' %}
 			<div class="toolbar-group">
@@ -23,6 +24,30 @@ Challenges
             {% endif %}
 {% endblock %}
 {% block content %}
+{% if rdp_integration %}
+<div class="split-layout">
+	<section class="left-rdp-view">
+		<div id="rdpContainer">
+		</div>
+	</section>
+	<section class="md-view">
+		<div class="md-view-handle" aria-label="Drag to resize"></div>
+		<h1 id="challengeTitle" class="page-title">Challenges</h1>
+		<h2 id="challengeSubtitle" class="page-subtitle" style="display: none;">Subsite</h2>
+
+		<!-- Render Markdown -->
+		<zero-md id="zeromd" src="">
+			<template>
+				<style>
+					:host { display: block; position: relative; contain: content; }
+					:host([hidden]) { display: none; }
+				</style>
+				<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/zeromd.css') }}" />
+			</template>
+		</zero-md>
+	</section>
+</div>
+{% else %}
 <section class="view fade-in">
 
 <h1 id="challengeTitle" class="page-title">Challenges</h1>
@@ -42,6 +67,7 @@ Challenges
 </zero-md>
 
 </section>
+{% endif %}
 {% endblock %}
 
 {% block bottomloadscript %}
@@ -63,5 +89,8 @@ Challenges
 <script type="text/javascript">
     window.defaultChallengeUrl='{{ url_for("static_challenges", filename="") }}';
 </script>
+{% if rdp_integration %}
+<script type="module" src="{{ url_for('static', filename='assets/js/scroll-anchor.js') }}"></script>
+{% endif %}
 <script type="module" src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
 {% endblock %}

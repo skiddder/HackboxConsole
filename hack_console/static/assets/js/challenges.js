@@ -1,4 +1,5 @@
 import { getMdManager } from "./mdmanager.js";
+import { getRdpClient } from "./rdp-integration.js";
 
 // challenge view
 window.challenge = getMdManager(
@@ -23,3 +24,12 @@ window.challenge = getMdManager(
 );
 window.challenge.setPeriodicRefresh(10);
 window.challenge.registerHotkeys();
+
+
+(async () => {
+    const rdpClient = await getRdpClient(rdpContainer);
+    if (rdpClient) {
+        // You can now use rdpClient to interact with the RDP session
+    }
+
+})();

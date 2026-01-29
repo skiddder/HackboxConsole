@@ -23,6 +23,30 @@ Solutions
             {% endif %}
 {% endblock %}
 {% block content %}
+{% if rdp_integration %}
+<div class="split-layout">
+	<section class="left-rdp-view">
+		<div id="rdpContainer">
+		</div>
+	</section>
+	<section class="md-view">
+		<div class="md-view-handle" aria-label="Drag to resize"></div>
+		<h1 id="solutionTitle" class="page-title">Solutions</h1>
+		<h2 id="solutionSubtitle" class="page-subtitle" style="display: none;">Subsite</h2>
+
+		<!-- Render Markdown -->
+		<zero-md id="zeromd" src="">
+			<template>
+				<style>
+					:host { display: block; position: relative; contain: content; }
+					:host([hidden]) { display: none; }
+				</style>
+				<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/zeromd.css') }}" />
+			</template>
+		</zero-md>
+	</section>
+</div>
+{% else %}
 <section class="view fade-in">
 
 <h1 id="solutionTitle" class="page-title">Solutions</h1>
@@ -41,6 +65,7 @@ Solutions
 </zero-md>
 
 </section>
+{% endif %}
 {% endblock %}
 
 {% block bottomloadscript %}
@@ -62,5 +87,8 @@ Solutions
 <script type="text/javascript">
     window.defaultSolutionUrl='{{ url_for("static_solutions", filename="") }}';
 </script>
+{% if rdp_integration %}
+<script type="module" src="{{ url_for('static', filename='assets/js/scroll-anchor.js') }}"></script>
+{% endif %}
 <script type="module" src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
 {% endblock %}

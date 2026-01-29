@@ -615,7 +615,7 @@ def api_get_rdp_connection():
         return jsonify({"endpoints": []}), 200
     if not isinstance(current_user, HackBoxUser):
         return jsonify({"endpoints": rdp_endpoints }), 200
-    if current_user.role not in ["coach", "hacker"]:
+    if current_user.role in ["coach", "hacker"]:
         # todo retrieve rdp connections information for the current user
         rdpconnection = {
             "user": None,
@@ -623,7 +623,13 @@ def api_get_rdp_connection():
             "host": None,
             "port": 3389
         }
-        return jsonify({"endpoints": rdp_endpoints, "rdpconnection": rdpconnection}), 200
+        rdpconnection = {
+            "host": '172.160.240.183',
+            "port": 3389,
+            "user": 'marco',
+            "pass": '40+k8RPH-G5r'
+        }
+        return jsonify({"endpoints": rdp_endpoints, "connection": rdpconnection}), 200
     return jsonify({"endpoints": rdp_endpoints})
 
 #endregion -------- API ENDPOINTS --------
@@ -667,4 +673,15 @@ def static_favicon():
 @app.route('/site.webmanifest.json')
 def static_webmanifest():
     return send_from_directory(os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", "assets"), 'img/site.webmanifest.json', mimetype='application/manifest+json')
+
+# Explicit route for freerdp-web to ensure CORS headers for WASM/SharedArrayBuffer/Workers
+@app.route('/static/freerdp-web/<path:filename>')
+def static_freerdp_web(filename):
+    """Serve freerdp-web files with required CORS headers for WASM and SharedArrayBuffer."""
+    freerdp_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", "freerdp-web")
+    response = send_from_directory(freerdp_dir, filename)
+    # These headers are required for SharedArrayBuffer and WASM in workers
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
 #endregion -------- STATIC ENDPOINTS --------

@@ -1,4 +1,5 @@
 import { getMdManager } from "./mdmanager.js";
+import { getRdpClient } from "./rdp-integration.js";
 
 // solution view
 window.solution = getMdManager(
@@ -25,3 +26,10 @@ window.solution.setPeriodicRefresh(10);
 window.solution.registerHotkeys();
 
 
+(async () => {
+    const rdpClient = await getRdpClient(rdpContainer);
+    if (rdpClient) {
+        // You can now use rdpClient to interact with the RDP session
+    }
+    
+})();

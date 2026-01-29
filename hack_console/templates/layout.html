@@ -72,6 +72,9 @@
 			const threshold = 10;
 
 			window.addEventListener('scroll', function() {
+				// Skip if scroll-anchor is adjusting position
+				if (window._scrollAnchorAdjusting) return;
+
 				const currentScrollY = window.scrollY;
 				const delta = currentScrollY - lastScrollY;
 
