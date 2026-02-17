@@ -29,7 +29,7 @@ window.challenge.registerHotkeys(['rdpContainer']);
 (async () => {
     const rdpClient = await getRdpClient();
     if(rdpClient) {
-        // window.challenge.addRdpClient(rdpClient);
+        window.challenge.setRdpClient(rdpClient);
     }
 
 })();

@@ -9,7 +9,7 @@ window.solution = getMdManager(
         navToNext: "navToNextSolution",
         navToApprove: "approveCurrentSolution",
         navToRevert: "revertApproval",
-        navToApproveAll: "approveAllChallenges",
+        navToApproveAll: "approveAllSolutions",
         navToRevertAll: "revertAllApprovals",
         zeroMdElement: "zeromd",
         mdTitle: "solutionTitle",
@@ -29,6 +29,6 @@ window.solution.registerHotkeys(['rdpContainer']);
 (async () => {
     const rdpClient = await getRdpClient();
     if(rdpClient) {
-        // window.solution.addRdpClient(rdpClient);
+        window.solution.setRdpClient(rdpClient);
     } 
 })();

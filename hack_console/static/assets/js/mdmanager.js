@@ -291,8 +291,25 @@ export class MdManager {
         this.refresh();
     }
 
-    addRdpClient(rdpClient) {
+    #adjustSecretTitles() {
+        let rdpActive = this.#rdpClient && this.#rdpClient.isConnected();
+        // replace all titles (click handlers are already set to inject into RDP if client is available, so we only need to update the title here)
+        this.#elements.zeroMdElement.shadowRoot.querySelectorAll('span.secret').forEach((elem) => {
+            if(rdpActive) {
+                elem.title = elem.title.replace('Double click to copy credential.', 'Double Click to inject credential into RDP session.');
+            }
+            else {
+                elem.title = elem.title.replace('Double Click to inject credential into RDP session.', 'Double click to copy credential.');
+            }
+        });
+
+    }
+
+    setRdpClient(rdpClient) {
         this.#rdpClient = rdpClient;
+        this.#rdpClient.on("connected", this.#adjustSecretTitles.bind(this));
+        this.#rdpClient.on("disconnected", this.#adjustSecretTitles.bind(this));
+        this.#adjustSecretTitles();
     }
 
     gotoSubSiteMd(path) {
