@@ -831,6 +831,10 @@ export class MdManager {
                 // ignore when focused on input or textarea or contenteditable
                 return;
             }
+            // ignore key presses originating from within the RDP container (shadow DOM)
+            if(event.composedPath().some(el => el instanceof HTMLElement && el.id === 'rdpContainer')) {
+                return;
+            }
             // ignore key presses with modifier keys (Ctrl, Alt, Shift, Meta)
             if(event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
                 return;
