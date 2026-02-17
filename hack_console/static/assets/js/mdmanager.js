@@ -823,16 +823,17 @@ export class MdManager {
         await this.#setApprovedChallenge("decrease");
     }
 
-    registerHotkeys() {
+    registerHotkeys(ignoreElementIds = []) {
         console.log("Registering hotkeys");
         // register <- and -> for navigation
+        const ignoreIds = new Set(ignoreElementIds);
         document.addEventListener('keydown', (event) => {
             if(event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable) {
                 // ignore when focused on input or textarea or contenteditable
                 return;
             }
-            // ignore key presses originating from within the RDP container (shadow DOM)
-            if(event.composedPath().some(el => el instanceof HTMLElement && el.id === 'rdpContainer')) {
+            // ignore key presses originating from within ignored containers (e.g. shadow DOM)
+            if(ignoreIds.size > 0 && event.composedPath().some(el => el instanceof HTMLElement && ignoreIds.has(el.id))) {
                 return;
             }
             // ignore key presses with modifier keys (Ctrl, Alt, Shift, Meta)

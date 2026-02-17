@@ -23,7 +23,7 @@ window.challenge = getMdManager(
     }
 );
 window.challenge.setPeriodicRefresh(10);
-window.challenge.registerHotkeys();
+window.challenge.registerHotkeys(['rdpContainer']);
 
 
 (async () => {

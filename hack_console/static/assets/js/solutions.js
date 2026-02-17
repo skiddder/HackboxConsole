@@ -23,7 +23,7 @@ window.solution = getMdManager(
     }
 );
 window.solution.setPeriodicRefresh(10);
-window.solution.registerHotkeys();
+window.solution.registerHotkeys(['rdpContainer']);
 
 
 (async () => {
