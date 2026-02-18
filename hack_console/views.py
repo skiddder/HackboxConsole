@@ -59,6 +59,31 @@ challenges_mds = recursive_list_md_files(challenges_dir, "challenge")
 solutions_mds = recursive_list_md_files(solutions_dir, "solution")
 
 
+class HackBoxRdpConnections:
+    _tsc = None
+    _tc  = None
+    _tenantName = "Default"
+
+    def __init__(self, tenantName : str = "Default"):
+        endpoint = get_table_endpoint()
+        if endpoint:
+            self._tsc = TableServiceClient(endpoint=endpoint, credential=get_azure_credential())
+        else:
+            self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
+        self._tc = self._tsc.get_table_client("rdpconnections")
+        self._tenantName = str(tenantName).strip()
+        if self._tenantName == "":
+            self._tenantName = "Default"
+
+    def getRdpConnectionForUser(self, username: str) -> Dict[str, str]:
+        connections = {}
+        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{self._tenantName}' and RowKey eq '{username}'"):
+            del entity["PartitionKey"]
+            del entity["RowKey"]
+            connections[entity["name"]] = entity["Credential"]
+        return connections
+
+
 class HackBoxCredentials:
     _tsc = None
     _tc  = None
@@ -621,6 +646,12 @@ def api_get_rdp_connection():
             "user": None,
             "pass": None,
             "host": None,
+            "port": 3389
+        }
+        rdpconnection = {
+            "user": "marco",
+            "pass": "Bu1l-K2.3WovR7",
+            "host": "172.160.242.147",
             "port": 3389
         }
         return jsonify({"endpoints": rdp_endpoints, "connection": rdpconnection}), 200
