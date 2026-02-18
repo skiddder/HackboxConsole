@@ -29,7 +29,6 @@ else {
     else {
         Invoke-WebRequest -Uri "https://github.com/microsoft/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
     }
-    #Invoke-WebRequest -Uri "https://github.com/qxsch/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
     Expand-Archive "$script:WhatTheHackRepo.zip" -DestinationPath "$script:WhatTheHackRepo"
     Remove-Item "$script:WhatTheHackRepo.zip" -Force | Out-Null
 }
