@@ -133,6 +133,11 @@ resource credentialsTable 'Microsoft.Storage/storageAccounts/tableServices/table
   name: 'credentials'
 }
 
+resource rdpConnectionsTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021-04-01' = {
+  parent: tableService
+  name: 'rdpconnections'
+}
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: appServicePlanName
   location: location

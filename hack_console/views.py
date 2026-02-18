@@ -59,29 +59,52 @@ challenges_mds = recursive_list_md_files(challenges_dir, "challenge")
 solutions_mds = recursive_list_md_files(solutions_dir, "solution")
 
 
-class HackBoxRdpConnections:
+class HackBoxConnections:
     _tsc = None
     _tc  = None
-    _tenantName = "Default"
 
-    def __init__(self, tenantName : str = "Default"):
+    def __init__(self):
         endpoint = get_table_endpoint()
         if endpoint:
             self._tsc = TableServiceClient(endpoint=endpoint, credential=get_azure_credential())
         else:
             self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("rdpconnections")
-        self._tenantName = str(tenantName).strip()
-        if self._tenantName == "":
-            self._tenantName = "Default"
 
-    def getRdpConnectionForUser(self, username: str) -> Dict[str, str]:
-        connections = {}
-        for entity in self._tc.query_entities(query_filter=f"PartitionKey eq '{self._tenantName}' and RowKey eq '{username}'"):
+    def getConnectionForUser(self, username: str, connection : str) -> Union[None, Dict[str, str]]:
+        try:
+            entity = self._tc.get_entity(partition_key=username, row_key=connection)
+            entity["username"] = entity["PartitionKey"]
+            entity["connection"] = entity["RowKey"]
             del entity["PartitionKey"]
             del entity["RowKey"]
-            connections[entity["name"]] = entity["Credential"]
-        return connections
+            return entity
+        except ResourceNotFoundError:
+            return None
+    
+    def getRdpConnectionForUser(self, username: str) -> Union[None, Dict[str, Union[str, int]]]:
+        rdpconn = self.getConnectionForUser(username, "rdp")
+        if rdpconn is None:
+            return None
+        del rdpconn["connection"]
+        del rdpconn["username"]
+        if "user" in rdpconn and "pass" in rdpconn and "host" in rdpconn:
+            if "port" not in rdpconn:
+                rdpconn["port"] = 3389
+            else:
+                try:
+                    rdpconn["port"] = int(rdpconn["port"])
+                except:
+                    rdpconn["port"] = 3389
+            return {
+                "user": str(rdpconn["user"]),
+                "pass": str(rdpconn["pass"]),
+                "host": str(rdpconn["host"]),
+                "port": rdpconn["port"]
+            }
+        return None
+
+    
 
 
 class HackBoxCredentials:
@@ -636,26 +659,23 @@ def api_set_tenants_settings():
 
 @app.route("/api/get/rdp-connection", methods=["GET"])
 def api_get_rdp_connection():
+    if not rdp_integration:
+        return jsonify({"endpoints": []}), 200
     if len(rdp_endpoints) == 0:
         return jsonify({"endpoints": []}), 200
     if not isinstance(current_user, HackBoxUser):
         return jsonify({"endpoints": rdp_endpoints }), 200
     if current_user.role in ["coach", "hacker"]:
-        # todo retrieve rdp connections information for the current user
-        rdpconnection = {
-            "user": None,
-            "pass": None,
-            "host": None,
-            "port": 3389
-        }
-        rdpconnection = {
-            "user": "marco",
-            "pass": "Bu1l-K2.3WovR7",
-            "host": "172.160.242.147",
-            "port": 3389
-        }
-        return jsonify({"endpoints": rdp_endpoints, "connection": rdpconnection}), 200
-    return jsonify({"endpoints": rdp_endpoints})
+        try:
+            hbConnections = HackBoxConnections()
+            rdpconnection = hbConnections.getRdpConnectionForUser(current_user.username)
+            if rdpconnection is None:
+                raise Exception("No RDP connection found for user \"" + current_user.username + "\"")
+            return jsonify({"endpoints": rdp_endpoints, "connection": rdpconnection}), 200
+        except Exception as e:
+            print("Error fetching RDP connection for user", e)
+            return jsonify({"endpoints": rdp_endpoints}), 200
+    return jsonify({"endpoints": rdp_endpoints}), 200
 
 #endregion -------- API ENDPOINTS --------
 

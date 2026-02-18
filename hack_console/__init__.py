@@ -19,6 +19,9 @@ def add_security_headers(response):
     return response
 
 
+def sanitize_username(username : str) -> str:
+    # just allow alphanumeric characters, underscores, dashes, @ and dots in the username
+    return "".join([c for c in str(username) if c.isalnum() or c == "_" or c == "-" or c == "@" or c == "."]).strip()
 
 
 class HackBoxUser(UserMixin):
@@ -28,12 +31,12 @@ class HackBoxUser(UserMixin):
     role = ""
     tenant = "Default"
     def __init__(self, username, password, role, tenant = "Default"):
-        self.username = str(username).lower().strip()
+        self.username = sanitize_username(username).lower()
         self.password = str(password)
         self.role = str(role).lower().strip()
         self.role = role if role in ["hacker", "coach", "techlead"] else "hacker"
         self.tenant = str(tenant).strip()
-        self.id = str(username).lower().strip()
+        self.id = sanitize_username(username).lower()
 
 def create_all_users():
     allUsers = { }
@@ -52,7 +55,7 @@ def create_all_users():
                     if role not in ["hacker", "coach", "techlead"]:
                         role = "hacker"
                     print(f"Adding user {usr['username']} with role {role} and tenant {tenant}")
-                    allUsers[str(usr["username"]).lower().strip()] = HackBoxUser(
+                    allUsers[sanitize_username(usr["username"]).lower()] = HackBoxUser(
                         str(usr["username"]),
                         str(usr["password"]),
                         role,
@@ -63,12 +66,12 @@ def create_all_users():
         print("Loaded users from users.json")
         return allUsers
     print("Loading users from environment variables (HACKBOX_HACKER_USER, HACKBOX_HACKER_PWD, HACKBOX_COACH_USER, HACKBOX_COACH_PWD)")
-    allUsers[str(os.getenv("HACKBOX_HACKER_USER", "hacker")).lower().strip()] = HackBoxUser(
+    allUsers[sanitize_username(os.getenv("HACKBOX_HACKER_USER", "hacker")).lower()] = HackBoxUser(
         os.getenv("HACKBOX_HACKER_USER", "hacker"),
         os.getenv("HACKBOX_HACKER_PWD", "hacker"),
         "hacker"
     )
-    allUsers[str(os.getenv("HACKBOX_COACH_USER", "coach")).lower().strip()] = HackBoxUser(
+    allUsers[sanitize_username(os.getenv("HACKBOX_COACH_USER", "coach")).lower()] = HackBoxUser(
         os.getenv("HACKBOX_COACH_USER", "coach"),
         os.getenv("HACKBOX_COACH_PWD", "coach"),
         "coach"
