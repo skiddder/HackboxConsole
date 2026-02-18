@@ -1,6 +1,7 @@
 param(
     [string]$HackName = "",
     [string]$HackVariant = "",
+    [string]$GithubForkUser = "",
     [switch]$Download
 )
 
@@ -21,7 +22,13 @@ else {
     if(Test-Path "$script:WhatTheHackRepo.zip" -PathType Leaf) {
         Remove-Item "$script:WhatTheHackRepo.zip" -Force
     }
-    Invoke-WebRequest -Uri "https://github.com/microsoft/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
+    if($GithubForkUser -ne "") {
+        Write-Host "Downloading from user fork: $GithubForkUser"
+        Invoke-WebRequest -Uri "https://github.com/$GithubForkUser/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
+    }
+    else {
+        Invoke-WebRequest -Uri "https://github.com/microsoft/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
+    }
     #Invoke-WebRequest -Uri "https://github.com/qxsch/WhatTheHack/archive/refs/heads/master.zip" -OutFile "$script:WhatTheHackRepo.zip"
     Expand-Archive "$script:WhatTheHackRepo.zip" -DestinationPath "$script:WhatTheHackRepo"
     Remove-Item "$script:WhatTheHackRepo.zip" -Force | Out-Null
