@@ -25,19 +25,29 @@ Credential payload objects received from the pipeline or passed explicitly.
 Each object should expose at least the 'name' and 'value' properties, and can
 optionally include 'group' and 'tenant' to override their defaults.
 
+If the 'connections' table is targeted, the object should have
+'hackboxuser', 'user', 'pass', and 'host' properties,
+with an optional 'port' and an optional 'hackboxconnection' property.
+
 .EXAMPLE
 Get-Content .\creds.json | ConvertFrom-Json | .\addMultipleCredentials.ps1 -storageAccountName 'contosovault' -ResourceGroupName 'HackConsole'
 Loads credential objects from creds.json and writes them to the credentials table.
 
 .EXAMPLE
-[pscustomobject]@{ name = 'ApiKey'; value = 'secret'; group = 'Prod'; tenant = 'team1' } |
-  .\.ps1 -storageAccountName 'storageName'
+[pscustomobject]@{ name = 'ApiKey'; value = 'secret'; group = 'Prod'; tenant = 'team1' } | .\addMultipleCredentials.ps1
 Creates an inline credential object and submits it directly through the pipeline.
+
+.EXAMPLE
+[pscustomobject]@{ hackboxuser = 'hacker01'; user = 'admin'; pass = 'topsecret'; host = '10.1.2.3' ; port = 3389 } | .\addMultipleCredentials.ps1 -TableName 'connections'
+Assigns the user an rdp connection in the connections table.
+
 #>
 [CmdletBinding()]
 param(
     [string]$storageAccountName = "",
     [string]$ResourceGroupName = "HackConsole",
+    [ValidateSet("credentials", "connections")]
+    [string]$TableName = "credentials",
     [string]$ip = "",
     [switch]$skipFirewallRule,
     [Parameter(ValueFromPipeline = $true)]
@@ -256,7 +266,7 @@ begin {
         $keyResult = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction Stop
         $script:storageAccountKey = $keyResult.Value[0]
         
-        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName 'credentials' -StorageAccountKey $script:storageAccountKey)) {
+        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName $TableName -StorageAccountKey $script:storageAccountKey)) {
             $script:storageAccountKey = $null
         }
     }
@@ -266,7 +276,7 @@ begin {
 
     # If storage account keys didn't work, try OAuth
     if (-not $script:storageAccountKey) {
-        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName 'credentials')) {
+        if (-not (Test-TableConnectionRest -StorageAccountName $storageAccountName -TableName $TableName)) {
             throw "Failed to connect to the storage table. Ensure your user has 'Storage Table Data Contributor' role on the storage account."
         }
     }
@@ -288,41 +298,88 @@ process {
             return
         }
 
-        # Extract properties from the input object
-        $name = $InputObject.name
-        $value = $InputObject.value
+        if($TableName -eq "credentials") {
+            # Extract properties from the input object
+            $name = $InputObject.name
+            $value = $InputObject.value
 
-        $group = if ($InputObject.PSObject.Properties.Match('group')) { $InputObject.group } else { 'Default' }
-        $group = (($group.ToCharArray() | Where-Object { $_ -match '[a-zA-Z0-9_-]' }) -join '').Trim()
-        if ($group -eq '') { $group = 'Default' }
-        $tenant = if ($InputObject.PSObject.Properties.Match('tenant')) { $InputObject.tenant } else { 'Default' }
-        $note = if ($InputObject.PSObject.Properties.Match('note')) { $InputObject.note } else { '' }
-        if($note.Length -gt 160) {
-            Write-Warning "Note length exceeds 160 characters. Truncating."
-            $note = $note.Substring(0, 160)
+            $group = if ($InputObject.PSObject.Properties.Match('group')) { $InputObject.group } else { 'Default' }
+            $group = (($group.ToCharArray() | Where-Object { $_ -match '[a-zA-Z0-9_-]' }) -join '').Trim()
+            if ($group -eq '') { $group = 'Default' }
+            $tenant = if ($InputObject.PSObject.Properties.Match('tenant')) { $InputObject.tenant } else { 'Default' }
+            $note = if ($InputObject.PSObject.Properties.Match('note')) { $InputObject.note } else { '' }
+            if($note.Length -gt 160) {
+                Write-Warning "Note length exceeds 160 characters. Truncating."
+                $note = $note.Substring(0, 160)
+            }
+            if ([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($value)) {
+                Write-Warning "Input object must have non-empty 'name' and 'value' properties. Skipping this entry."
+                return
+            }
+
+            # Build properties hashtable
+            $properties = @{
+                group = $group
+                name = $name
+                Credential = $value
+                note = $note
+            }
+            # Use REST API (with storage key if available, OAuth otherwise)
+            $statusCode = Write-TableEntityRest -StorageAccountName $storageAccountName -TableName $TableName -PartitionKey $tenant -RowKey "$group|$name" -Properties $properties -StorageAccountKey $script:storageAccountKey
+            
+            if($statusCode -ge 200 -and $statusCode -lt 300) {
+                Write-Host "Successfully added credential '$name' in group '$group' for tenant '$tenant'."
+            }
+            else {
+                Write-Warning "Failed to add credential '$name' in group '$group' for tenant '$tenant'. Status code: $statusCode"
+            }
         }
-        if ([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($value)) {
-            Write-Warning "Input object must have non-empty 'name' and 'value' properties. Skipping this entry."
+        elseif ($TableName -eq "connections") {
+            $hackboxuser = $InputObject.hackboxuser
+            $hackboxconnection = if($InputObject.PSObject.Properties.Match('hackboxconnection')) { $InputObject.hackboxconnection } else { 'rdp' }
+            if([string]::IsNullOrWhiteSpace($hackboxuser)) {
+                Write-Warning "Input object must have non-empty 'hackboxuser' property. Skipping this entry."
+                return
+            }
+            if([string]::IsNullOrWhiteSpace($hackboxconnection)) {
+                $hackboxconnection = 'rdp'
+            }
+            if([string]::IsNullOrWhiteSpace($InputObject.user) -or [string]::IsNullOrWhiteSpace($InputObject.pass) -or [string]::IsNullOrWhiteSpace($InputObject.host)) {
+                Write-Warning "Input object must have non-empty 'user', 'pass', and 'host' properties for connection entries. Skipping this entry."
+                return
+            }
+            $properties = @{
+                user = $InputObject.user
+                pass = $InputObject.pass
+                host = $InputObject.host
+            }
+            if($InputObject.PSObject.Properties.Match('port')) {
+                # try to parse port as int, default to 3389 if parsing fails
+                try {
+                    $properties['port'] = [int]$InputObject.port
+                    if($properties['port'] -le 0 -or $properties['port'] -gt 65535) {
+                        Write-Warning "Port number '$($properties['port'])' is out of valid range (1-65535). Defaulting to 3389. Ignoring the invalid port value."
+                        $properties.Remove('port')
+                    }
+                }
+                catch {
+                }
+            }
+            # Use REST API (with storage key if available, OAuth otherwise)
+            $statusCode = Write-TableEntityRest -StorageAccountName $storageAccountName -TableName $TableName -PartitionKey $hackboxuser -RowKey $hackboxconnection -Properties $properties -StorageAccountKey $script:storageAccountKey
+            
+            if($statusCode -ge 200 -and $statusCode -lt 300) {
+                Write-Host "Successfully added connection '$hackboxconnection' for user '$hackboxuser'."
+            }
+            else {
+                Write-Warning "Failed to add connection '$hackboxconnection' for user '$hackboxuser'. Status code: $statusCode"
+            }
+        }
+        else {
+            Write-Warning "Unsupported table name '$TableName'. Skipping."
             return
         }
 
-        # Build properties hashtable
-        $properties = @{
-            group = $group
-            name = $name
-            Credential = $value
-            note = $note
-        }
-        
-        # Use REST API (with storage key if available, OAuth otherwise)
-        $statusCode = Write-TableEntityRest -StorageAccountName $storageAccountName -TableName 'credentials' -PartitionKey $tenant -RowKey "$group|$name" -Properties $properties -StorageAccountKey $script:storageAccountKey
-        
-        if($statusCode -ge 200 -and $statusCode -lt 300) {
-            Write-Host "Successfully added credential '$name' in group '$group' for tenant '$tenant'."
-        }
-        else {
-            Write-Warning "Failed to add credential '$name' in group '$group' for tenant '$tenant'. Status code: $statusCode"
-        }
     }
     catch {
         Write-Error "An error occurred: $_"
