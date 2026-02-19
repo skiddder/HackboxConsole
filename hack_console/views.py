@@ -71,11 +71,13 @@ class HackBoxConnections:
             self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
         self._tc = self._tsc.get_table_client("rdpconnections")
 
-    def getConnectionForUser(self, username: str, connection : str) -> Union[None, Dict[str, str]]:
+    def getConnectionForUser(self, username: str, connection : str) -> Union[None, Dict[str, Union[str, int, bool, Dict[str, str]]]]:
         try:
             entity = self._tc.get_entity(partition_key=username, row_key=connection)
-            entity["username"] = entity["PartitionKey"]
-            entity["connection"] = entity["RowKey"]
+            entity["hackbox"] = {
+                "username": entity["PartitionKey"],
+                "connection": entity["RowKey"]
+            }
             del entity["PartitionKey"]
             del entity["RowKey"]
             return entity
@@ -86,8 +88,7 @@ class HackBoxConnections:
         rdpconn = self.getConnectionForUser(username, "rdp")
         if rdpconn is None:
             return None
-        del rdpconn["connection"]
-        del rdpconn["username"]
+        del rdpconn["hackbox"]
         if "user" in rdpconn and "pass" in rdpconn and "host" in rdpconn:
             if "port" not in rdpconn:
                 rdpconn["port"] = 3389
