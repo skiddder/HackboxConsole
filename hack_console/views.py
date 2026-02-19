@@ -69,7 +69,7 @@ class HackBoxConnections:
             self._tsc = TableServiceClient(endpoint=endpoint, credential=get_azure_credential())
         else:
             self._tsc = TableServiceClient.from_connection_string(conn_str=os.getenv("HACKBOX_CONNECTION_STRING"))
-        self._tc = self._tsc.get_table_client("rdpconnections")
+        self._tc = self._tsc.get_table_client("connections")
 
     def getConnectionForUser(self, username: str, connection : str) -> Union[None, Dict[str, Union[str, int, bool, Dict[str, str]]]]:
         try:

@@ -135,7 +135,7 @@ resource credentialsTable 'Microsoft.Storage/storageAccounts/tableServices/table
 
 resource rdpConnectionsTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021-04-01' = {
   parent: tableService
-  name: 'rdpconnections'
+  name: 'connections'
 }
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
