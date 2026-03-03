@@ -88,8 +88,9 @@ Solutions
 <script type="text/javascript">
     window.defaultSolutionUrl='{{ url_for("static_solutions", filename="") }}';
 </script>
+<script type="module" src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
 {% if rdp_integration %}
 <script type="module" src="{{ url_for('static', filename='assets/js/scroll-anchor.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/js/solutions-rdp.js') }}"></script>
 {% endif %}
-<script type="module" src="{{ url_for('static', filename='assets/js/solutions.js') }}"></script>
 {% endblock %}

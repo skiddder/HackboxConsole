@@ -89,8 +89,9 @@ Challenges
 <script type="text/javascript">
     window.defaultChallengeUrl='{{ url_for("static_challenges", filename="") }}';
 </script>
+<script type="module" src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
 {% if rdp_integration %}
 <script type="module" src="{{ url_for('static', filename='assets/js/scroll-anchor.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/js/challenges-rdp.js') }}"></script>
 {% endif %}
-<script type="module" src="{{ url_for('static', filename='assets/js/challenges.js') }}"></script>
 {% endblock %}

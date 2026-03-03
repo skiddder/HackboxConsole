@@ -24,12 +24,3 @@ window.challenge = getMdManager(
 );
 window.challenge.setPeriodicRefresh(10);
 window.challenge.registerHotkeys(['rdpContainer']);
-
-
-(async () => {
-    const rdpClient = await getRdpClient();
-    if(rdpClient) {
-        window.challenge.setRdpClient(rdpClient);
-    }
-
-})();
