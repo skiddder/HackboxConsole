@@ -1,5 +1,4 @@
 import { getMdManager } from "./mdmanager.js";
-import { getRdpClient } from "./rdp-integration.js";
 
 // challenge view
 window.challenge = getMdManager(
